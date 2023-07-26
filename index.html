@@ -160,6 +160,7 @@
                                     <input type="text" name="" placeholder="Message" required  id="" class="form-control">
                                 </div>
                             </div>
+
                             <input class="form-submit-btn mt-16 s-full-width" type="submit" value="SEND">
                         </form>
                     </div>
@@ -221,71 +222,9 @@
             </footer>
         </div>
     </div>
-
-    <!-- Test modal -->
-    <div class="modal-login js-login-DN">
-        <div class="modal-dangnhap-container">
-            <h2 class="modal-heading-dangnhap">Đăng nhập</h2>
-        <input type="text" class="modal-input-email" placeholder="Email/Số điện thoại/ Tên đăng nhập">
-        <input type="text" class="modal-input-email" placeholder="Mật khẩu">
-        <button class="modal-btn-dangnhap js-btn">Đăng nhập</button>
-        </div>
-    </div>
-    <script>
-        const buyBtns = document.querySelectorAll('.js-buy-ticket')
-        const modal = document.querySelector('.js-modal');
-        const modalClose = document.querySelector('.js-modal-close');
-        const modalContainer = document.querySelector('.js-modal-container');
-
-        //Hàm hiển thị modal mua vé (thêm class open vào modal )
-        function showBuyticket() {
-            // alert("show");
-            modal.classList.add('open');
-        }
-
-        //Hàm ẩn modal mua vé (gỡ bỏ class open của modal)
-        function hideBuyticket() {
-            // alert("show");
-            modal.classList.remove('open');
-        }
-
-        //Lặp qua từng thẻ button và nghe hành vi click
-        for (buyBtn of buyBtns) {
-            buyBtn.addEventListener('click',showBuyticket);
-        }
-
-        //Nghen hành vi click vào button close
-        modalClose.addEventListener('click',hideBuyticket);
-
-        modal.addEventListener('click',hideBuyticket);
-
-        modalContainer.addEventListener('click',function(event){
-            event.stopPropagation();
-        })
-    </script>
         
     <script>
-	//lấy chỗ bấm
-        const logins = document.querySelectorAll('.js-dangnhap');
-		//add nó vào
-        const modallgin = document.querySelector('.js-login-DN');
-		//nút mà ấn
-        const btndangnhap = document.querySelector('.js-btn');
-        function openLogin(){
-            modallgin.classList.add('open-dangnhap');
-        }
-
-        function closeLogin() {
-            modallgin.classList.remove('open-dangnhap');
-            alert('Chúc mừng bạn đăng nhập thành công!!!');
-        }
-
-        for(login of logins){ 
-            login.addEventListener('click',openLogin);
-        }
-
-        btndangnhap.addEventListener('click',closeLogin);
-
+	
 
 
         //reponship
@@ -307,6 +246,7 @@
         //Tự đóng khi chọn menu
         var menuItems = document.querySelectorAll('#nav li a[href*= "#"]');
         menuItems.forEach(function(item) {
+            
             item.onclick = function () {
                 var isParentMenu = this.nextElementSibling && this.nextElementSibling.classList.contains('Subnav');
                 if (!isParentMenu) {
@@ -314,6 +254,7 @@
                 }else {
                     event.preventDefault();
                 }
+                
             }
         });
     </script>
