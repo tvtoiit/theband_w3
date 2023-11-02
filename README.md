@@ -152,6 +152,28 @@ public class MstCustomer {
 
 
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class AbstractCommon {
+    public static Connection getConnection() {
+        Connection conn = null;
+        try {
+            // Thay đổi class driver (ví dụ cho SQL Server)
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+
+            // Thay đổi chuỗi kết nối (connection string) tương ứng
+            String URL = "jdbc:sqlserver://localhost:1433;databaseName=yourDatabaseName";
+            String USER = "yourUsername";
+            String PASS = "yourPassword";
+            conn = DriverManager.getConnection(URL, USER, PASS);
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return conn;
+    }
+}
 
 
 
