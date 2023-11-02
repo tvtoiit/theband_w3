@@ -177,3 +177,6 @@ public class AbstractCommon {
 
 
 
+
+
+https://mkyong.com/spring/maven-spring-hibernate-mysql-example/
