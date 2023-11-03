@@ -180,3 +180,14 @@ public class AbstractCommon {
 
 
 https://mkyong.com/spring/maven-spring-hibernate-mysql-example/
+
+
+
+@Repository
+public class LoginDao extends BaseDao {
+	public List<Integer> checkLogin(MSTUSER userDto) {
+		String sql = "SELECT COUNT(*) AS CNT FROM MSTUSER WHERE DELETE_YMD IS NULL AND USERID = ? AND PASSWORD = ?";
+		List<Integer> list = _jdbcTemplate.query(sql);
+		return list;
+	}
+}
