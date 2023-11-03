@@ -194,6 +194,16 @@ public class LoginDao extends BaseDao {
 
 
 
+package fjs.cs.dao;
+
+import java.util.List;
+
+import javax.transaction.Transaction;
+
+import org.hibernate.classic.Session;
+import org.springframework.stereotype.Repository;
+
+import fjs.cs.model.MSTUSER;
 @Repository
 public class LoginDao extends BaseDao {
     public MSTUSER checkLogin(String userId, String password) {
@@ -219,4 +229,5 @@ public class LoginDao extends BaseDao {
         return user;
     }
 }
+
 
