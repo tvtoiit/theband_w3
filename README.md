@@ -267,3 +267,213 @@ public class HibernateTestConnection {
     }
 }
 
+
+
+
+
+------------------------
+
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+	<class name="fjs.cs.model.MSTUSER" table="MSTUSER" >
+		<id name="psnCd" type="int">
+			<column name="PSN_CD"/>
+			<generator class="assigned" />
+		</id>
+		<property name="userID" type="string">
+			<column name="USERID" length="50"/>
+		</property>
+		<property name="password" type="string">
+			<column name="PASSWORD" length="50"/>
+		</property>
+		<property name="userName" type="String">
+			<column name="USERNAME" length="50"/>
+		</property>
+		<property name="deleteYMD" type="timestamp">
+			<column name="DELETE_YMD"/>
+		</property>
+		<property name="insertYMD" type="timestamp">
+			<column name="INSERT_YMD"/>
+		</property>
+		<property name="insertPSNCD" type="int">
+			<column name="INSERT_PSN_CD"/>
+		</property>
+		<property name="updateYMD" type="timestamp">
+			<column name="UPDATE_YMD"/>
+		</property>
+		<property name="updatePSNCD" type="int">
+			<column name="UPDATE_PSN_CD"/>
+		</property>
+	</class>
+</hibernate-mapping>
+
+
+
+
+-------applicationContext----
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:orm="http://www.springframework.org/schema/orm"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+		http://www.springframework.org/schema/orm
+		http://www.springframework.org/schema/orm/spring-orm.xsd">
+	<!-- Configure Data Source -->
+<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	<property name="locations">
+		<value>WEB-INF/src/app.properties</value>
+	</property>
+	<property name="ignoreResourceNotFound" value="true"/>
+</bean>
+
+<bean id="dataSource" 
+         class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+	<property name="driverClassName" value="${jdbc.driverClassName}" />
+	<property name="url" value="${jdbc.url}" />
+	<property name="username" value="${jdbc.username}" />
+	<property name="password" value="${jdbc.password}" />
+</bean>
+
+<bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+	<property name="dataSource" ref="dataSource"/>
+	<property name="mappingResources">
+	<list>
+		<value>fjs/cs/hibernate/MSTUSER.hbm.xml</value>
+		<value>fjs/cs/hibernate/MSTCUSTOMER.hbm.xml</value>
+	</list>
+	</property>
+	<property name="hibernateProperties">
+		<props>
+			<prop key="hibernate.dialect">org.hibernate.dialect.SQLServerDialect</prop>
+			<prop key="hibernate.show_sql">true</prop>
+			<prop key="hibernate.format_sql">true</prop>
+		</props>
+	</property>
+</bean>
+
+ <!-- Configure Struts 1  -->
+<!-- DAO Beans  -->
+	<bean id="loginDao" class="fjs.cs.dao.LoginDao">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	<bean id="customerDao" class="fjs.cs.dao.customerDao">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	<!-- Service Beans -->
+	<bean id="loginService" class="fjs.cs.service.LoginService">
+		<property name="loginDao" ref="loginDao"></property>
+	</bean>
+	<bean id="searchService" class="fjs.cs.service.SearchService">
+		<property name="customerDao" ref="customerDao"></property>
+	</bean>
+	<bean id="deleteService" class="fjs.cs.service.DeleteService">
+		<property name="customerDao" ref="customerDao"></property>
+	</bean>
+	<bean id="editService" class="fjs.cs.service.EditService">
+		<property name="customerDao" ref="customerDao"></property>
+	</bean>
+	<bean id="importService" class="fjs.cs.service.ImportService">
+		<property name="customerDao" ref="customerDao"></property>
+	</bean>
+	
+</beans>
+
+
+
+---------------------- app.properties
+
+# -- set infomation for the database connection --
+db.serverName=TOI-TV-VM\SQLEXPRESS
+db.dbName=customersystem
+db.portNumber=1433
+db.userID=sa
+db.password=Abc12345
+db.driverClassName=com.microsoft.sqlserver.jdbc.SQLServerDriver
+db.url=jdbc:sqlserver://localhost:1433;databaseName=customersystem
+
+
+
+-----------------------web.xml
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app
+  PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN"
+  "http://java.sun.com/j2ee/dtds/web-app_2_2.dtd">
+
+<web-app>
+  <display-name>Struts Blank Application</display-name>
+
+  <!-- Standard Action Servlet Configuration (with debugging) -->
+  <servlet>
+    <servlet-name>action</servlet-name>
+    <servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
+    <init-param>
+      <param-name>config</param-name>
+      <param-value>/WEB-INF/struts-config.xml</param-value>
+    </init-param>
+    <init-param>
+      <param-name>debug</param-name>
+      <param-value>2</param-value>
+    </init-param>
+    <init-param>
+      <param-name>detail</param-name>
+      <param-value>2</param-value>
+    </init-param>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+
+
+  <!-- Standard Action Servlet Mapping -->
+  <servlet-mapping>
+    <servlet-name>action</servlet-name>
+    <url-pattern>*.do</url-pattern>
+  </servlet-mapping>
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/applicationContext.xml</param-value>
+	</context-param>
+
+  <!-- The Usual Welcome File List -->
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+
+
+  <!-- Struts Tag Library Descriptors -->
+  <taglib>
+    <taglib-uri>/tags/struts-bean</taglib-uri>
+    <taglib-location>/WEB-INF/struts-bean.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+    <taglib-uri>/tags/struts-html</taglib-uri>
+    <taglib-location>/WEB-INF/struts-html.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+    <taglib-uri>/tags/struts-logic</taglib-uri>
+    <taglib-location>/WEB-INF/struts-logic.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+    <taglib-uri>/tags/struts-nested</taglib-uri>
+    <taglib-location>/WEB-INF/struts-nested.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+    <taglib-uri>/tags/struts-tiles</taglib-uri>
+    <taglib-location>/WEB-INF/struts-tiles.tld</taglib-location>
+  </taglib>
+
+</web-app>
+
+
+
