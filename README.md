@@ -230,4 +230,40 @@ public class LoginDao extends BaseDao {
     }
 }
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateTestConnection {
+
+    public static void main(String[] args) {
+        SessionFactory sessionFactory = null;
+        Session session = null;
+
+        try {
+            // Tạo SessionFactory từ tệp cấu hình Hibernate (hibernate.cfg.xml)
+            sessionFactory = new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
+
+            // Mở một phiên làm việc Hibernate
+            session = sessionFactory.openSession();
+
+            // Kiểm tra kết nối đến cơ sở dữ liệu bằng cách thử lấy thông tin từ cơ sở dữ liệu
+            String testQuery = "SELECT 1";
+            int result = (int) session.createSQLQuery(testQuery).uniqueResult();
+            System.out.println("Kết nối thành công! Kết quả truy vấn: " + result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Kết nối thất bại: " + e.getMessage());
+        } finally {
+            // Đóng phiên làm việc
+            if (session != null) {
+                session.close();
+            }
+            // Đóng SessionFactory
+            if (sessionFactory != null) {
+                sessionFactory.close();
+            }
+        }
+    }
+}
 
