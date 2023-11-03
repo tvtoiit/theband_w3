@@ -191,3 +191,32 @@ public class LoginDao extends BaseDao {
 		return list;
 	}
 }
+
+
+
+@Repository
+public class LoginDao extends BaseDao {
+    public MSTUSER checkLogin(String userId, String password) {
+        Session session = sessionFactory.openSession();
+        Transaction tx = null;
+        MSTUSER user = null;
+        try {
+            tx = session.beginTransaction();
+            Criteria criteria = session.createCriteria(MSTUSER.class);
+            criteria.add(Restrictions.eq("USERID", userId));
+            criteria.add(Restrictions.eq("PASSWORD", password));
+            criteria.add(Restrictions.isNull("DELETE_YMD"));
+            user = (MSTUSER) criteria.uniqueResult();
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        return user;
+    }
+}
+
