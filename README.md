@@ -1464,3 +1464,28 @@ create table MSTUSER (
 create table MSTCUSTOMER(
 	
 )
+
+
+
+
+
+public List<Object[]> getData() {
+    StringBuilder hql = new StringBuilder();
+    hql.append("SELECT customerID, customerName, ");
+    hql.append("CASE WHEN sex = 0 THEN 'Male' ELSE 'Female' END AS sex, ");
+    hql.append("birthday, address ");
+    hql.append("FROM MSTCustomer ");
+    hql.append("WHERE deleteYMD IS NULL ");
+    hql.append("ORDER BY customerID");
+
+    Query query = getSession().createQuery(hql.toString());
+    List<Object[]> results = query.list();
+
+    return results;
+}
+
+
+
+
+
+
