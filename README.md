@@ -1275,3 +1275,57 @@ errors.password = \u30D1\u30B9\u30EF\u30FC\u30C9\u3092\u5165\u529B\u3057\u3066\u
 <%@ taglib uri="/tags/struts-logic" prefix="logic" %>
 <logic:redirect forward="/Login"/>
 
+
+
+
+
+---login
+
+
+<%@ page language="java" contentType="text/html; charset=utf-8"%>
+<%@include file="../WEB-INF/common/Taglib.jsp" %>
+<html:html locale="true">
+<head>
+<title><bean:message key="login.title"/></title>
+<style type="text/css">
+	<%@include file="../WEB-INF/css/Login.css" %>
+	<%@include file="../WEB-INF/css/Base.css" %>
+</style>
+<script src="./src/js/Login.js"></script>
+<html:base/>
+</head>
+<body>
+	<%@include file="../WEB-INF/common/Header.jsp" %>
+	<div class="content">
+		<div class="content-text">Login</div>
+		<div class="content-login">
+			   <form action="./Login.do" method="POST">
+				<div class="content-login__header">
+					<h3>LOGIN</h3>
+					<div id="lblErrorMessage">
+						 <html:errors/>
+					</div>
+				</div>
+				<div class="content-login__container">
+					<div class="form-group">
+						<label for="fullname" class="form-label form-label__userID">User
+							Id: </label>
+						<input name="userID" id="txtUserID" value="" maxlength="8" class="form-control" />
+					</div>
+					<div class="form-group__password">
+						<label for="password" class="form-label">Password: </label>
+						<html:password property="password" styleId="txtPassword"  value='' maxlength="8" styleClass="form-control" />
+					</div>
+					<div class="form-group__btn">
+						<html:submit styleId="btnLogin" styleClass="form-submit" value="Login" />
+						<html:reset styleId="btnClear" styleClass="form-submit" value="Clear"/>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	<%@include file="../WEB-INF/common/Footer.jsp" %>	
+</body>
+</html:html>
+
+
