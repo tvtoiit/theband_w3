@@ -1333,3 +1333,113 @@ errors.password = \u30D1\u30B9\u30EF\u30FC\u30C9\u3092\u5165\u529B\u3057\u3066\u
 
 
 <param property="username" name="username" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
+* @(#)LoginAction.java 01-00 2023/06/20
+* 
+* Version 1.00
+* Last_Update 2023/07/11
+*/
+
+package fjs.cs.action;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.web.struts.ActionSupport;
+
+import fjs.cs.common.Constants;
+import fjs.cs.form.LoginForm;
+import fjs.cs.model.MSTUSER;
+import fjs.cs.service.LoginService;
+
+/**
+ * LoginAction
+ * 
+ * This action handles the login function
+ * 
+ * @version 1.00
+ * @since 1.00
+ * 
+ */
+
+public class LoginAction extends ActionSupport {
+
+	/**
+	 * Processes the login request from the user.
+	 *
+	 * @param mapping   An ActionMapping object that contains information about the mapping of the Action.
+	 * @param form      An ActionForm object that holds the login request data.
+	 * @param request   An HttpServletRequest object that contains information about the HTTP request.
+	 * @param response  An HttpServletResponse object that contains information about the HTTP response.
+	 * @return          An ActionForward object indicating the forward path for the request.
+	 * @throws Exception    If any exception occurs during the execution of the method.
+	 */
+
+	public ActionForward execute( ActionMapping mapping, ActionForm form, HttpServletRequest request,
+								  HttpServletResponse response) throws Exception {
+
+		LoginForm loginForm = (LoginForm) form;
+		ActionMessages errors = loginForm.validateForm(mapping, request);
+		String forward = Constants.FORWARD_FAILURE;
+		
+		System.out.println(loginForm.getUsername() + "nguyenvana" + loginForm.getPassword());
+		String userName = loginForm.getUsername();
+		String passWord = loginForm.getPassword();
+		if (userName != null && passWord != null) {
+			LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+			MSTUSER user = new MSTUSER();
+			user.setUserID(userName);
+			user.setPassword(passWord);
+			MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+			if (loggedInUser != null) {
+				request.getSession().setAttribute("user", loggedInUser);
+				forward = Constants.FORWARD_SUCCESS;
+			} else {
+				errors.add("", new ActionMessage("errors.notExist"));
+				this.saveErrors(request, errors);
+			}
+		}
+		
+		if (!errors.isEmpty()) {
+			this.saveErrors(request, errors);
+		} else {
+			LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+
+			MSTUSER user = new MSTUSER();
+			BeanUtils.copyProperties(user, loginForm);
+			MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+
+			if (loggedInUser != null) {
+				request.getSession().setAttribute("user", loggedInUser);
+				forward = Constants.FORWARD_SUCCESS;
+			} else {
+				errors.add("", new ActionMessage("errors.notExist"));
+				this.saveErrors(request, errors);
+			}
+		}
+		return mapping.findForward(forward);
+	}
+}
+
