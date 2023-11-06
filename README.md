@@ -1443,3 +1443,24 @@ public class LoginAction extends ActionSupport {
 	}
 }
 
+
+
+Database--------------------------
+create database customersystem;
+use customersystem;
+
+create table MSTUSER (
+	PSN_CD NUMERIC(4) primary key not null,
+	USERID VARCHAR(8),
+	PASSWORD VARCHAR(8),
+	USERNAME VARCHAR(40),
+	DELETE_YMD TIMESTAMP default(null),
+	INSERT_YMD TIMESTAMP default(CURRENT_TIMESTAMP),
+	INSERT_PSN_CD NUMERIC(5) default(0),
+	UPDATE_YMD TIMESTAMP default(null),
+	UPDATE_PSN_CD NUMERIC(5) default(5)
+)
+
+create table MSTCUSTOMER(
+	
+)
