@@ -1,3 +1,88 @@
+public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    LoginForm loginForm = (LoginForm) form;
+    String modeLogin = loginForm.getsMODE();
+
+    if (loginFormHasValues(loginForm)) {
+        return handleLogin(mapping, loginForm);
+    } else if (isEmptyModeLogin(modeLogin)) {
+        return mapping.findForward(Constants.FORWARD_FAILURE);
+    } else if (modeLogin.equals(Constants.MODE_LOGIN)) {
+        return handleLoginWithValidation(mapping, request, loginForm);
+    }
+
+    return mapping.findForward(Constants.FORWARD_FAILURE);
+}
+
+private boolean loginFormHasValues(LoginForm loginForm) {
+    String userName = loginForm.getUsername();
+    String passWord = loginForm.getPassword();
+    return userName != null && passWord != null;
+}
+
+private boolean isEmptyModeLogin(String modeLogin) {
+    return modeLogin == null || modeLogin.isEmpty();
+}
+
+private ActionForward handleLogin(ActionMapping mapping, LoginForm loginForm) {
+    LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+    MSTUSER user = new MSTUSER();
+    loginForm.setUserID(loginForm.getUsername());
+    loginForm.setPassWord(loginForm.getPassword());
+    BeanUtils.copyProperties(user, loginForm);
+    MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+
+    if (loggedInUser != null) {
+        return mapping.findForward(Constants.FORWARD_SUCCESS);
+    } else {
+        ActionMessage errors = new ActionMessage("errors.urlLogin");
+        return mapping.findForward(Constants.FORWARD_FAILURE);
+    }
+}
+
+private ActionForward handleLoginWithValidation(ActionMapping mapping, HttpServletRequest request, LoginForm loginForm) {
+    ActionMessages errors = loginForm.validateForm(mapping, request);
+
+    if (!errors.isEmpty()) {
+        this.saveErrors(request, errors);
+    } else {
+        LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+        MSTUSER user = new MSTUSER();
+        BeanUtils.copyProperties(user, loginForm);
+        MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+
+        if (loggedInUser != null) {
+            request.getSession().setAttribute("user", loggedInUser);
+            return new ActionForward(Constants.FORWARD_SUCCESS);
+        } else {
+            request.setAttribute("userId", loginForm.getUserID());
+            request.setAttribute("passWord", loginForm.getPassWord());
+            errors.add("", new ActionMessage("errors.notExist"));
+            this.saveErrors(request, errors);
+        }
+    }
+
+    return mapping.findForward(Constants.FORWARD_FAILURE);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public ActionForward execute( ActionMapping mapping, ActionForm form, HttpServletRequest request,
 								  HttpServletResponse response) throws Exception {
 		String forward = Constants.FORWARD_FAILURE;
