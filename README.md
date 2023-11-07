@@ -1,3 +1,69 @@
+public ActionForward execute( ActionMapping mapping, ActionForm form, HttpServletRequest request,
+								  HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		LoginForm loginForm = (LoginForm) form;
+		String userName = loginForm.getUsername();
+		String passWord = loginForm.getPassword();
+		String modeLogin = loginForm.getsMODE();
+		
+		//System.out.println(userName + "-----" + passWord);
+		
+		if (userName != null && passWord != null) {
+			LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+
+			MSTUSER user = new MSTUSER();
+			loginForm.setUserID(userName);
+			loginForm.setPassWord(passWord);
+			System.out.println(123);
+			BeanUtils.copyProperties(user, loginForm);
+			MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+
+			if (loggedInUser != null) {
+				return mapping.findForward(Constants.FORWARD_SUCCESS);
+			} else {
+				ActionMessage errors = new ActionMessage("errors.urlLogin");
+				return mapping.findForward(forward);
+			}
+		}
+		System.out.println(modeLogin);
+		if (modeLogin == null || modeLogin.isEmpty()) {
+			return mapping.findForward(forward);
+		} 
+		
+		if (modeLogin.equals(Constants.MODE_LOGIN)) {
+			ActionMessages errors = loginForm.validateForm(mapping, request);
+			if (!errors.isEmpty()) {
+				this.saveErrors(request, errors);
+			} else {
+				LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+
+				MSTUSER user = new MSTUSER();
+				BeanUtils.copyProperties(user, loginForm);
+				MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+
+				if (loggedInUser != null) {
+					request.getSession().setAttribute("user", loggedInUser);
+					forward = Constants.FORWARD_SUCCESS;
+				} else {
+					request.setAttribute("userId", loginForm.getUserID());
+					request.setAttribute("passWord", loginForm.getPassWord());
+					errors.add("", new ActionMessage("errors.notExist"));
+					this.saveErrors(request, errors);
+				}
+			}
+		}
+		
+		return mapping.findForward(forward);
+	}
+
+
+
+
+
+
+
+
+
 # theband_w3
 
 1. Cơ sở dữ liệu:
