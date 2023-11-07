@@ -2,6 +2,172 @@
 * Copyright(c) Fujinet Co., Ltd.
 * All rights reserved. 
 * 
+* @(#)MSTUSER.java 01-00 2023/06/20
+* 
+* Version 1.00
+* Last_Update 2023/07/11
+*/
+
+package fjs.cs.model;
+
+import java.io.Serializable;
+import java.sql.Timestamp;
+
+/**
+ * MSTUSER
+ * 
+ * Data transfer object for MSTUSER entity.
+ * 
+ * @version 1.00
+ * @since 1.00
+ * 
+ */
+
+public class MSTUSER implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	
+	private int psnCd;
+	private String userID;
+	private String password;
+	private String userName;
+	private Timestamp deleteYMD;
+	private Timestamp insertYMD;
+	private int insertPSNCD;
+	private Timestamp updateYMD;
+	private int updatePSNCD;
+
+	/**
+	 * Default constructor for MSTUSER class.
+	 */
+	public MSTUSER() {
+		super();
+	}
+	
+	/**
+	 * Constructs a new instance of MSTUSER with the specified parameters.
+	 *
+	 * @param userID       the user ID
+	 * @param password     the password
+	 * @param userName     the user name
+	 * @param deleteYMD    the deletion date
+	 * @param insertYMD    the insertion date
+	 * @param insertPSNCD  the insertion process code
+	 * @param updateYMD    the update date
+	 * @param updatePSNCD  the update process code
+	 */
+	
+	public MSTUSER(String userID, String password, String userName, Timestamp deleteYMD, Timestamp insertYMD,
+				   int insertPSNCD, Timestamp updateYMD, int updatePSNCD) {
+		super();
+		this.userID = userID;
+		this.password = password;
+		this.userName = userName;
+		this.deleteYMD = deleteYMD;
+		this.insertYMD = insertYMD;
+		this.insertPSNCD = insertPSNCD;
+		this.updateYMD = updateYMD;
+		this.updatePSNCD = updatePSNCD;
+	}
+
+	/*Getter and Setter*/
+	
+	public int getPsnCd() {
+		return psnCd;
+	}
+
+	public void setPsnCd(int psnCd) {
+		this.psnCd = psnCd;
+	}
+
+	public String getUserID() {
+		return userID;
+	}
+
+	public void setUserID(String userID) {
+		this.userID = userID;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public Timestamp getDeleteYMD() {
+		return deleteYMD;
+	}
+
+	public void setDeleteYMD(Timestamp deleteYMD) {
+		this.deleteYMD = deleteYMD;
+	}
+
+	public Timestamp getInsertYMD() {
+		return insertYMD;
+	}
+
+	public void setInsertYMD(Timestamp insertYMD) {
+		this.insertYMD = insertYMD;
+	}
+
+	public int getInsertPSNCD() {
+		return insertPSNCD;
+	}
+
+	public void setInsertPSNCD(int insertPSNCD) {
+		this.insertPSNCD = insertPSNCD;
+	}
+
+	public Timestamp getUpdateYMD() {
+		return updateYMD;
+	}
+
+	public void setUpdateYMD(Timestamp updateYMD) {
+		this.updateYMD = updateYMD;
+	}
+
+	public int getUpdatePSNCD() {
+		return updatePSNCD;
+	}
+
+	public void setUpdatePSNCD(int updatePSNCD) {
+		this.updatePSNCD = updatePSNCD;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
 * @(#)LoginAction.java 01-00 2023/06/20
 * 
 * Version 1.00
