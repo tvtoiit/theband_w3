@@ -1531,3 +1531,55 @@ public ActionForward execute( ActionMapping mapping, ActionForm form, HttpServle
 		}
 		return mapping.findForward(forward);
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public ActionForward execute( ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    LoginForm loginForm = (LoginForm) form;
+    ActionMessages errors = loginForm.validateForm(mapping, request);
+    String forward = Constants.FORWARD_FAILURE;
+
+    String userName = loginForm.getUsername();
+    String passWord = loginForm.getPassword();
+
+    if (userName != null && passWord != null) {
+        forward = processLogin(userName, passWord, request, errors, loginForm);
+    } else {
+        forward = Constants.FORWARD_FAILURE;
+        errors.add("", new ActionMessage("errors.urlLogin" + userName + passWord));
+        this.saveErrors(request, errors);
+    }
+
+    return mapping.findForward(forward);
+}
+
+private String processLogin(String userName, String passWord, HttpServletRequest request, ActionMessages errors, LoginForm loginForm) {
+    LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+    MSTUSER user = new MSTUSER();
+    user.setUserID(userName);
+    user.setPassword(passWord);
+    MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+
+    if (loggedInUser != null) {
+        request.getSession().setAttribute("user", loggedInUser);
+        return Constants.FORWARD_SUCCESS;
+    } else {
+        errors.add("", new ActionMessage("errors.urlLogin" + userName + passWord));
+        this.saveErrors(request, errors);
+        return Constants.FORWARD_FAILURE;
+    }
+}
