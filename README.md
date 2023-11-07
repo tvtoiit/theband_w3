@@ -1,3 +1,132 @@
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
+* @(#)LoginAction.java 01-00 2023/06/20
+* 
+* Version 1.00
+* Last_Update 2023/07/11
+*/
+
+package fjs.cs.action;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.web.struts.ActionSupport;
+
+import fjs.cs.common.Constants;
+import fjs.cs.form.LoginForm;
+import fjs.cs.model.MSTUSER;
+import fjs.cs.service.LoginService;
+
+/**
+ * LoginAction
+ * 
+ * This action handles the login function
+ * 
+ * @version 1.00
+ * @since 1.00
+ * 
+ */
+
+public class LoginAction extends ActionSupport {
+
+	/**
+	 * Processes the login request from the user.
+	 *
+	 * @param mapping   An ActionMapping object that contains information about the mapping of the Action.
+	 * @param form      An ActionForm object that holds the login request data.
+	 * @param request   An HttpServletRequest object that contains information about the HTTP request.
+	 * @param response  An HttpServletResponse object that contains information about the HTTP response.
+	 * @return          An ActionForward object indicating the forward path for the request.
+	 * @throws Exception    If any exception occurs during the execution of the method.
+	 */
+
+	public ActionForward execute( ActionMapping mapping, ActionForm form, HttpServletRequest request,
+								  HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		LoginForm loginForm = (LoginForm) form;
+		String userName = loginForm.getUsername();
+		
+		//get data username and password of url
+		String passWord = loginForm.getPassword();
+		String modeLogin = loginForm.getsMODE();
+		
+		ActionMessages errors = loginForm.validateForm(mapping, request);
+		
+		//Check the username and password, if they exist, then log in
+		if (userName != null && passWord != null) {
+			LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+			MSTUSER user = new MSTUSER();
+			loginForm.setUserID(userName);
+			loginForm.setPassWord(passWord);
+			BeanUtils.copyProperties(user, loginForm);
+			MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+
+			if (loggedInUser != null) {
+				return mapping.findForward(Constants.FORWARD_SUCCESS);
+			} else {
+				errors.add("", new ActionMessage("errors.notExist" + userName + passWord));
+				this.saveErrors(request, errors);
+			}
+		}
+		
+		/**
+		 * Check modelogin, if the user has not clicked on the Login button, then forward the login screen
+		 */
+		if (modeLogin == null || modeLogin.isEmpty()) {
+			return mapping.findForward(forward);
+		}
+		
+		//Check if the user clicks on the login button then logs in
+		if (modeLogin.equals(Constants.MODE_LOGIN)) {
+			if (!errors.isEmpty()) {
+				this.saveErrors(request, errors);
+			} else {
+				LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+
+				MSTUSER user = new MSTUSER();
+				BeanUtils.copyProperties(user, loginForm);
+				MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+				
+				//	If loggedInUser is present, switch to the Search screen
+				if (loggedInUser != null) {
+					request.getSession().setAttribute("user", loggedInUser);
+					forward = Constants.FORWARD_SUCCESS;
+				} else {
+					//Save login value when user is not in the database
+					request.setAttribute("userId", loginForm.getUserID());
+					request.setAttribute("passWord", loginForm.getPassWord());
+					errors.add("", new ActionMessage("errors.notExist"));
+					this.saveErrors(request, errors);
+				}
+			}
+		}
+		return mapping.findForward(forward);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
     LoginForm loginForm = (LoginForm) form;
     String modeLogin = loginForm.getsMODE();
