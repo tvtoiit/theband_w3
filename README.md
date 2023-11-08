@@ -1,16 +1,15 @@
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.SQLQuery;
+import org.hibernate.transform.Transformers;
 
 public List<MSTCUSTOMER> getAllCustomer() {
-    List<MSTCUSTOMER> currentCustomers = null;
+    List<MSTCUSTOMER> currentCustomers = new ArrayList<>();
     try {
         Session session = getSession();
-        Criteria criteria = session.createCriteria(MSTCUSTOMER.class);
-        criteria.add(Restrictions.isNull("DELETE_YMD")); // Assuming DELETE_YMD is a field in MSTCUSTOMER
-        criteria.addOrder(Order.asc("CUSTOMER_ID"));
+        String sql = "SELECT CUSTOMER_ID, CUSTOMER_NAME, CASE WHEN SEX = 0 THEN 'Male' ELSE 'Female' END AS SEX, BIRTHDAY, ADDRESS FROM " + Constants.TABLE_CUSTOMER + " WHERE DELETE_YMD IS NULL ORDER BY CUSTOMER_ID";
         
-        currentCustomers = criteria.list();
+        SQLQuery getCustomerQuery = session.createSQLQuery(sql);
+        getCustomerQuery.setResultTransformer(Transformers.aliasToBean(MSTCUSTOMER.class));
+        currentCustomers = getCustomerQuery.list();
     } catch (Exception e) {
         e.printStackTrace();
     }
