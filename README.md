@@ -1,3 +1,21 @@
+public List<MSTCUSTOMER> getAllCustomer() {
+		List<MSTCUSTOMER> currentCustomer = null;
+	    try {
+	        String sql = "SELECT CUSTOMER_ID, CUSTOMER_NAME, CASE WHEN SEX = 0 THEN 'Male' ELSE 'Female' END AS SEX, BIRTHDAY, ADDRESS FROM "+Constants.TABLE_CUSTOMER+" WHERE DELETE_YMD IS NULL ORDER BY CUSTOMER_ID";
+	        
+	        Query getCustomerQuery = getSession().createQuery(sql);
+	        currentCustomer = getCustomerQuery.uniqueResult();	
+	        
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	 
+	   
+	}
+
+
+
+
 /**
 * Copyright(c) Fujinet Co., Ltd.
 * All rights reserved. 
