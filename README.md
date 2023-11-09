@@ -1,3 +1,61 @@
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.criterion.Restrictions;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MstCustomerDAO {
+
+    public List<MstCustomer> deleteData(String[] selecValue) {
+        List<MstCustomer> listDelete = new ArrayList<>();
+
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Transaction tx = null;
+
+        try {
+            tx = session.beginTransaction();
+
+            Criteria criteria = session.createCriteria(MstCustomer.class);
+            criteria.add(Restrictions.in("customerId", Arrays.asList(selecValue)));
+
+            // Lấy danh sách các khách hàng sẽ bị xóa
+            listDelete = criteria.list();
+
+            // Thực hiện cập nhật
+            if (!listDelete.isEmpty()) {
+                String hql = "UPDATE MstCustomer SET deleteYmd = CURRENT_TIMESTAMP WHERE customerId IN (:ids)";
+                Query updateQuery = session.createQuery(hql);
+                updateQuery.setParameterList("ids", Arrays.asList(selecValue));
+                updateQuery.executeUpdate();
+            }
+
+            tx.commit();
+        } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+
+        return listDelete;
+    }
+}
+
+
+
+
+
+
+
+
+
+---------------
+
+
 import org.hibernate.SQLQuery;
 import org.hibernate.transform.Transformers;
 
