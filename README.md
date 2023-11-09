@@ -1,3 +1,8 @@
+<input name="userId" id="txtUserID" value="<logic:notEmpty name='userId'><bean:write name='userId'/><logic:else/><%= "" %></logic:notEmpty>" maxlength="8" class="form-control" />
+
+
+
+
 package com.demo.hibernate.dao;
 
 import java.util.ArrayList;
