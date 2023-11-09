@@ -1,3 +1,169 @@
+package com.demo.hibernate.dao;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
+import com.demo.hibernate.entity.MSTCUSTOMER;
+
+/**#################################################################
+ * @author ANICET ERIC KOUAME
+ * @Date: 20 mars 2017
+ * @Description:
+ *BookDao
+ *#################################################################*/
+
+public class BookDao extends HibernateDaoSupport {
+
+	
+	public List<MSTCUSTOMER> getAllCustomer() {
+	    List<MSTCUSTOMER> customers = new ArrayList<>();
+
+	    try {
+	        Query query = getSession().createQuery("FROM MSTCUSTOMER WHERE DELETE_YMD IS NULL ORDER BY CUSTOMER_ID");
+	        List<?> result = query.list();
+
+	        for (Iterator<?> iterator = result.iterator(); iterator.hasNext();) {
+	            MSTCUSTOMER customer = (MSTCUSTOMER) iterator.next();
+	            // Thực hiện logic chuyển đổi giới tính ở đây nếu cần
+	            // Ví dụ: customer.setSex(customer.getSex() == 0 ? "Male" : "Female");
+	            //customer.setSex(Integer.toString(customer.getSex()).equals("0") ? "Male" : "Female");
+	            customer.setSex("0".equals(customer.getSex()) ? "Male" : "Female");
+
+	            customers.add(customer);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return customers;
+	}
+
+	
+	
+	public List<MSTCUSTOMER> getCustomerSearchResults(String name, String sex, String birthdayFrom, String birthdayTo) {
+	    try {
+	        // Tạo câu truy vấn
+	        StringBuilder hql = new StringBuilder("FROM MSTCUSTOMER WHERE DELETE_YMD IS NULL");
+
+	        // Thêm điều kiện tìm kiếm theo tên nếu tên có
+	        if (name != null && !name.isEmpty()) {
+	            hql.append(" AND CUSTOMER_NAME LIKE :name");
+	        }
+
+	        // Thêm điều kiện tìm kiếm theo giới tính nếu giới tính có
+	        if (sex != null && !sex.isEmpty()) {
+	            hql.append(" AND SEX = :sex");
+	        }
+
+	        // Thêm điều kiện tìm kiếm theo ngày sinh bắt đầu nếu có
+	        if (birthdayFrom != null && !birthdayFrom.isEmpty()) {
+	            hql.append(" AND BIRTHDAY >= :birthdayFrom");
+	        }
+
+	        // Thêm điều kiện tìm kiếm theo ngày sinh kết thúc nếu có
+	        if (birthdayTo != null && !birthdayTo.isEmpty()) {
+	            hql.append(" AND BIRTHDAY <= :birthdayTo");
+	        }
+
+	        // Sắp xếp kết quả theo customerId
+	        hql.append(" ORDER BY CUSTOMER_ID");
+
+	        // Tạo Query và đặt tham số
+	        Query query = getSession().createQuery(hql.toString());
+
+	        // Đặt tham số
+	        if (name != null && !name.isEmpty()) {
+	            query.setParameter("name", "%" + name + "%");
+	        }
+
+	        if (sex != null && !sex.isEmpty()) {
+	            query.setParameter("sex", sex);
+	        }
+
+	        if (birthdayFrom != null && !birthdayFrom.isEmpty()) {
+	            query.setParameter("birthdayFrom", birthdayFrom);
+	        }
+
+	        if (birthdayTo != null && !birthdayTo.isEmpty()) {
+	            query.setParameter("birthdayTo", birthdayTo);
+	        }
+
+	        // Thực hiện truy vấn
+	        List<MSTCUSTOMER> customers = query.list();
+
+	        return customers;
+	    } catch (HibernateException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+	
+	public void deleteCustomers(String[] customerIds) {
+	    Transaction tx = null;
+
+	    try {
+	        tx = getSession().beginTransaction();
+
+	        String hql = "UPDATE MSTCUSTOMER SET DELETE_YMD = CURRENT_TIMESTAMP WHERE CUSTOMER_ID IN (:customerIds)";
+	        Query query = getSession().createQuery(hql);
+
+	        // Đặt danh sách giá trị vào tham số 'customerIds'
+	        query.setParameterList("customerIds", Arrays.asList(customerIds));
+
+	        int rowCount = query.executeUpdate();
+
+	        System.out.println("Rows affected: " + rowCount);
+
+	        tx.commit();
+	    } catch (HibernateException e) {
+	        if (tx != null) tx.rollback();
+	        e.printStackTrace();
+	    } 
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
