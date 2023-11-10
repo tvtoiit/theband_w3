@@ -1,3 +1,25 @@
+<a href="javascript:void(0);" onclick="submitFormAndRedirect()">Delete</a>
+
+<script>
+    function submitFormAndRedirect() {
+        // Lấy biểu mẫu theo ID
+        var form = document.getElementById("deleteForm");
+
+        // Gửi biểu mẫu
+        form.submit();
+
+        // Chuyển hướng trang (có thể sử dụng window.location.href cho chuyển hướng)
+        // Trong ví dụ này, chuyển hướng đến một trang khác
+        window.location.href = "./newpage.do";
+    }
+</script>
+
+
+
+
+
+
+
 public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
 		String forward = Constants.FORWARD_FAILURE;
