@@ -1,3 +1,40 @@
+public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		SearchForm searchForm = (SearchForm) form;
+		
+		String modeSearch = searchForm.getsMode();
+		List<MSTCUSTOMER> cus = null;
+		
+		SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
+		MSTCUSTOMER customer = new MSTCUSTOMER();
+		
+		cus = customerService.getAllCustomer();
+		customer.setPageData(cus);
+		
+		if (Constants.BEAN_SEARCH.equals(modeSearch)) {
+			cus = handleSearch(searchForm, customerService);
+			customer.setPageData(cus);
+		}
+		
+		request.setAttribute("model", customer);
+		return mapping.findForward(forward);
+	}
+	
+	 private List<MSTCUSTOMER> handleSearch(SearchForm searchForm, SearchService searchResult) {
+        String name = searchForm.getUserName();
+        String sex = searchForm.getSex();
+        String birthdayFrom = searchForm.getBrithTo();
+        String birthdayTo = searchForm.getBrithFrom();
+        List<MSTCUSTOMER> resultSearch = searchResult.getCustomerSearchResults(name, sex, birthdayFrom, birthdayTo);
+        return resultSearch;
+	 }
+
+
+
+
+
+
 <input name="userId" id="txtUserID" value="<logic:notEmpty name='userId'><bean:write name='userId'/><logic:else/><%= "" %></logic:notEmpty>" maxlength="8" class="form-control" />
 
 
