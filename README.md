@@ -1,56 +1,210 @@
-<a href="javascript:void(0);" onclick="submitFormAndRedirect()">Delete</a>
+---lưu giá trị giới tính
+<select name="sex" class="input_Customer--select" id="cboSex">
+    <option value="">blank</option>
+    <option value="0" <% if ("0".equals(request.getAttribute("sex"))) { %>selected<% } %>>Male</option>
+    <option value="1" <% if ("1".equals(request.getAttribute("sex"))) { %>selected<% } %>>Female</option>
+</select>
+
+----- CSS MÀN HÌNH SEARCH
+.search-container {
+	background-color: #ccffff;
+}
+
+.search-container__dan {
+	padding: 20px;
+}
+
+.search-container__text {
+	color: #000000;
+}
+
+.search-container__line {
+	font-size: 10px;
+	width: 100%;
+	height: 10px;
+	background-color: #3366ff;
+	margin-top: 25px;
+}
+
+.search-container__context {
+	padding-top: 20px;
+	display: flex;
+	justify-content: space-between;
+}
+
+.search-container__logo {
+	justify-content: space-between;
+}
+
+.search-container__handalSearch {
+	display: flex;
+	margin-top: 30px;
+	width: 100%;
+	height: 60px;
+	/*padding: 20px;*/
+	background-color: #ffff99;
+}
+
+.handalSearch-customerName {
+	display: flex;
+	align-items: center;
+}
+
+.handalSearch-customerSex {
+	display: flex;
+	align-items: center;
+}
+
+.handalSearch-BirthdayFrom {
+	display: flex;
+	align-items: center;
+}
+
+.handalSearch-btnSearch {
+	display: flex;
+	align-items: center;
+}
+
+#btnSearch {
+	height: 41px;
+}
+
+.handalSearch-customercommon {
+	line-height: 41px;
+}
+
+.search-container__handalSearch--margin {
+	flex: 1;
+}
+
+.handalSearch-customerName__text {
+	min-width: 120px;
+}
+
+.handalSearch-customerSex__text {
+	min-width: 30px;
+}
+
+.handalSearch-BirthdayFrom__text {
+	min-width: 50px;
+}
+
+.search-container__btnContext--chuyenhuong {
+	display: flex;
+	justify-content: space-between;
+}
+
+.search-container__btnContext--start button {
+	font-size: 20px;
+	padding: 2px;
+}
+
+.search-container__btnContext--end button {
+	font-size: 20px;
+	padding: 2px;
+}
+
+.search-container__btnContext--start lable {
+	font-size: 10px;
+	margin-left: 15px;
+}
+
+.search-container__btnContext--end lable {
+	font-size: 10px;
+	margin-right: 15px;
+}
+
+.search-container__btnContext--chuyenhuong {
+	margin: 30px 0;
+}
+
+.search-container__table {
+	width: 100%;
+}
+
+table {
+	border: 2px solid #339966;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+table tr:nth-child(odd) {
+	background-color: #ccffff;
+}
+
+table tr:nth-child(even) {
+	background-color: #ffffff;
+}
+
+table tr:nth-child(1) {
+	background-color: #339966;
+}
+
+th, td {
+	text-align: left;
+	padding: 10px;
+}
+
+.search-container__btnnav {
+	display: flex;
+	margin-top: 20px;
+}
+
+.search-container__btnnav .search-container__nav-btnAdd {
+	margin-right: 10px;
+}
+
+.input_Customer--common {
+	height: 35px;
+}
+
+.input_Customer--select {
+	height: 40px;
+}
+
+
+----------  CHECKALL
+
+<th><input type="checkbox" id="checkAll" name="checkboxAll" value="" onclick="toggleAllCheckboxes()"></th>
+
 
 <script>
-    function submitFormAndRedirect() {
-        // Lấy biểu mẫu theo ID
-        var form = document.getElementById("deleteForm");
+    // Hàm để xử lý sự kiện khi checkbox "Check All" được click
+    function toggleAllCheckboxes() {
+        var checkboxes = document.getElementsByName('selectedCustomers');
+        var checkAllCheckbox = document.getElementById('checkAll');
 
-        // Gửi biểu mẫu
-        form.submit();
+        // Lấy giá trị checked của checkbox "Check All"
+        var checkAllChecked = checkAllCheckbox.checked;
 
-        // Chuyển hướng trang (có thể sử dụng window.location.href cho chuyển hướng)
-        // Trong ví dụ này, chuyển hướng đến một trang khác
-        window.location.href = "./newpage.do";
+        // Duyệt qua tất cả các checkbox và cập nhật trạng thái checked của chúng
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = checkAllChecked;
+        }
     }
 </script>
 
 
 
+-------- Disable button 
+<button type="submit" <logic:notEmpty name="disBtnEndPage">disabled</logic:notEmpty>  name="pageAction" value="last">&gt;&gt;</button>
+
+if (page == endPage) {
+	request.setAttribute("disBtnEndPage", endPage);
+}
 
 
 
 
-public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
-		String forward = Constants.FORWARD_FAILURE;
-		SearchForm searchForm = (SearchForm) form;
-		
-		String modeSearch = searchForm.getsMode();
-		List<MSTCUSTOMER> cus = null;
-		
-		SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
-		MSTCUSTOMER customer = new MSTCUSTOMER();
-		
-		cus = customerService.getAllCustomer();
-		customer.setPageData(cus);
-		
-		if (Constants.BEAN_SEARCH.equals(modeSearch)) {
-			cus = handleSearch(searchForm, customerService);
-			customer.setPageData(cus);
-		}
-		
-		request.setAttribute("model", customer);
-		return mapping.findForward(forward);
-	}
-	
-	 private List<MSTCUSTOMER> handleSearch(SearchForm searchForm, SearchService searchResult) {
-        String name = searchForm.getUserName();
-        String sex = searchForm.getSex();
-        String birthdayFrom = searchForm.getBrithTo();
-        String birthdayTo = searchForm.getBrithFrom();
-        List<MSTCUSTOMER> resultSearch = searchResult.getCustomerSearchResults(name, sex, birthdayFrom, birthdayTo);
-        return resultSearch;
-	 }
+
+
+
+
+
+
+
+
+
 
 
 
