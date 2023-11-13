@@ -1,3 +1,87 @@
+<!-- Customer.hbm.xml -->
+<hibernate-mapping>
+    <class name="com.example.Customer" table="MSTCUSTOMER">
+        <id name="customerId" type="java.lang.Long">
+            <column name="CUSTOMER_ID" />
+            <generator class="sequence">
+                <param name="sequence">CUSTOMER_SEQ</param>
+            </generator>
+        </id>
+        <property name="customerName" type="string">
+            <column name="CUSTOMER_NAME" />
+        </property>
+        <!-- Các trường khác -->
+    </class>
+</hibernate-mapping>
+
+
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+
+public class CustomerDAO {
+    private SessionFactory sessionFactory;
+
+    // Constructor và getter/setter cho sessionFactory
+
+    public void saveCustomer(Customer customer) {
+        Session session = null;
+        Transaction transaction = null;
+
+        try {
+            session = sessionFactory.openSession();
+            transaction = session.beginTransaction();
+
+            // Set INSERT_YMD và UPDATE_YMD sử dụng thời gian hiện tại
+            customer.setInsertYmd(new Date());
+            customer.setUpdateYmd(new Date());
+
+            // Save the customer
+            session.save(customer);
+            
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+CREATE SEQUENCE your_sequence_name
+  START WITH 1
+  INCREMENT BY 1
+  NO MINVALUE
+  NO MAXVALUE
+  NO CYCLE
+  CACHE 1;
+
+
+
+
+
+
+
+
+
+return new ArrayList<>();
+
+
+
+
 ------------Sử dụng
 // get total item
 int pageCount = totalPage(customerService);
