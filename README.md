@@ -1,3 +1,76 @@
+------------Sử dụng
+// get total item
+int pageCount = totalPage(customerService);
+
+// Set button disabling flags
+disableButtonsBasedOnPageCount(request, pageCount);
+
+
+/**
+     * Set flags for button disabling based on the pageCount.
+     * 
+     * @param request   HttpServletRequest object for setting attributes
+     * @param pageCount Page count total
+     */
+    private void disableButtonsBasedOnPageCount(HttpServletRequest request, int pageCount , int page) {
+        boolean disableFirst = false;
+        boolean disablePrevious = false;
+        boolean disableNext = false;
+        boolean disableLast = false;
+        boolean disableDelete = false;
+
+        if (pageCount == 0) {
+            disableFirst = true;
+            disablePrevious = true;
+            disableNext = true;
+            disableLast = true;
+            disableDelete = true;
+        } else if (pageCount > 0 && pageCount < Constants.TOTAL_ITEM) {
+            disableFirst = true;
+            disablePrevious = true;
+            disableNext = true;
+            disableLast = true;
+        }
+
+ 	if (page == 1) {
+            disableFirst = true;
+            disablePrevious = true;
+        }
+
+        if (page == pageCount) {
+            disableNext = true;
+            disableLast = true;
+        }
+
+        // Set flags as request attributes
+        request.setAttribute("disableFirst", disableFirst);
+        request.setAttribute("disablePrevious", disablePrevious);
+        request.setAttribute("disableNext", disableNext);
+        request.setAttribute("disableLast", disableLast);
+        request.setAttribute("disableDelete", disableDelete);
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
 * Copyright(c) Fujinet Co., Ltd.
 * All rights reserved. 
