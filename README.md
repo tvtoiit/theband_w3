@@ -1,3 +1,413 @@
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
+* @(#)SearchAction.java 01-00 2023/11/13
+* 
+* Version 1.00
+* Last_Update 2023/11/13
+*/
+package fjs.cs.action;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.springframework.web.struts.ActionSupport;
+
+import fjs.cs.common.Constants;
+import fjs.cs.form.SearchForm;
+import fjs.cs.model.MSTCUSTOMER;
+import fjs.cs.service.SearchService;
+/**
+ * SearchAction
+ * 
+ * This class performs searching and paging
+ * 
+ * @version 1.00
+ * @since 1.00
+ * @author toi-tv
+ */
+
+public class SearchAction extends ActionSupport {
+	
+	/**
+	 * Perform search and pagination
+	 *
+	 * @param mapping   An ActionMapping object that contains information about the mapping of the Action.
+	 * @param form      An ActionForm object that holds the search request data.
+	 * @param request   An HttpServletRequest object that contains information about the HTTP request.
+	 * @param response  An HttpServletResponse object that contains information about the HTTP response.
+	 * @return          An ActionForward object indicating the forward path for the request.
+	 * @throws Exception    If any exception occurs during the execution of the method.
+	 */
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		SearchForm searchForm = (SearchForm) form;
+		String modeSearch = searchForm.getsMode();
+		
+		List<MSTCUSTOMER> cus = null;
+		String currentPageStr = null;
+		int page = 0;
+		 
+		SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
+		MSTCUSTOMER customer = new MSTCUSTOMER();
+	   
+		if(Constants.MODE_SEARCH.equals(modeSearch)) {
+			request.setAttribute("name", searchForm.getUserName());
+			request.setAttribute("sex", searchForm.getSex());
+			request.setAttribute("birthToDay", searchForm.getBrithTo());
+			request.setAttribute("birthFromDay", searchForm.getBrithFrom());
+
+		}
+		else {
+			//lấy trang hiện tại 
+			currentPageStr = searchForm.getCurrentPage();
+		}
+		
+		//get Mode
+		int currentPage;
+		
+		if (currentPageStr != null && !currentPageStr.isEmpty()) {
+			currentPage = Integer.parseInt(currentPageStr);
+		} else {
+			currentPage = 1;
+		}
+		
+		cus = handleSearch(searchForm, customerService, request);
+
+		
+		//get tottal item
+		int pageCount = totalPage(customerService);
+			
+		page = getAction(currentPage, searchForm, pageCount);
+		
+		//Tính giá trị index
+		int indexPage = (page*15)-15;
+		searchForm.setIndex(indexPage);
+		
+		request.setAttribute("tag", page);
+		customer.setPageData(cus);
+		request.setAttribute("pageMax", pageCount);
+		request.setAttribute("model", customer);
+
+		
+		disButton(cus, request, page, pageCount);
+		
+		return mapping.findForward(forward);
+	}
+	
+	/**
+	 * function handle button disabled
+	 * 
+	 * @param cus		List of search results 
+	 * @param request	An HttpServletRequest object that contains information about the HTTP request.
+	 * @param page		Current page number
+	 * @param pageCount Total pages
+	 */
+	private void disButton(List<MSTCUSTOMER> cus, HttpServletRequest request, int page, int pageCount) {
+		if (cus.size() <= 15) {
+			request.setAttribute("disBtn", true);
+		}
+		
+		if (cus.size() == 0) {
+			request.setAttribute("disBtnDelete", true);
+		}
+		
+		if (page == 1) {
+			request.setAttribute("disBtnFirst", true);
+		}
+		
+		if (page == pageCount) {
+			request.setAttribute("disBtnLast", true);
+		}
+	}
+	
+	/**
+	 * Calculate total number of pages
+	 * 
+	 * @param customerService 	Call the get count page function
+	 * @return pageCount 		Page count total
+	 */
+	private int totalPage(SearchService customerService) {
+		int countCustomer = customerService.getCountMstCustomer();
+		int pageCount = (int)Math.ceil(countCustomer / Constants.TOTAL_ITEM);
+		if (countCustomer % Constants.TOTAL_ITEM != 0) {
+			pageCount++;
+		}
+		return pageCount;
+	}
+
+	/**
+	 * Process searches based on user criteria
+	 * 
+	 * @param searchForm    Form value of search screen
+	 * @param searchResult  A input list to search
+	 * @param request       HttpServletRequest object for setting attributes
+	 * @return              Returns a search list, or null if there are validation errors
+	 */
+	private List<MSTCUSTOMER> handleSearch(SearchForm searchForm, SearchService searchResult, HttpServletRequest request) {
+	    String birthdayFrom = searchForm.getBrithFrom();
+	    String birthdayTo = searchForm.getBrithTo();
+
+	    // Trường hợp 1: Nếu birthdayTo không hợp lệ
+	    if (birthdayTo != null && !birthdayTo.isEmpty() && !isValidDateFormat(birthdayTo)) {
+	        request.setAttribute("invalidDateTo", true);
+	        return null;
+	    }
+
+	    // Trường hợp 2: Nếu birthdayFrom không hợp lệ
+	    if (birthdayFrom != null && !birthdayFrom.isEmpty() && !isValidDateFormat(birthdayFrom)) {
+	        request.setAttribute("invalidDateFrom", true);
+	        return null;
+	    }
+
+	    // Trường hợp 3: Nếu cả birthdayFrom và birthdayTo không hợp lệ hoặc birthdayFrom lớn hơn birthdayTo
+	    if ((birthdayFrom != null && birthdayFrom != ""  && !birthdayFrom.isEmpty() && !isStartDateBeforeEndDate(birthdayFrom, birthdayTo)) ||
+	       (birthdayTo != null  && birthdayFrom != "" && !birthdayTo.isEmpty() && !isStartDateBeforeEndDate(birthdayFrom,birthdayTo))) {
+	        request.setAttribute("invalidDateRange", true);
+	        return null;
+	    }
+
+	    // Nếu không có lỗi, thực hiện tìm kiếm và trả về kết quả
+	    List<MSTCUSTOMER> resultSearch = searchResult.getCustomerSearchResults(searchForm);
+	    return resultSearch;
+	}
+	
+	/**
+	 * Pagination action
+	 * 
+	 * @param currentPage  Current page location
+	 * @param searchForm   Search form data
+	 * @param endPage	   Last page  
+	 * @return 			   Returns the current page position
+	 */
+	 private int getAction(int currentPage,  SearchForm searchForm, int endPage) {
+		 String mode = searchForm.getsMode();
+	    	if (Constants.MODE_FIRST.equals(mode)) {
+	    		 return 1;
+	    	} else if (Constants.MODE_PREVIOUS.equals(mode)) {
+	            return Math.max(currentPage - 1, 1);
+	        } else if (Constants.MODE_NEXT.equals(mode)) {
+	            return Math.min(currentPage + 1, endPage);
+	        } else if (Constants.MODE_LAST.equals(mode)) {
+	            return endPage;
+	        }
+		    return currentPage;
+	 }
+	 
+	 /**
+	  * Function to check date format "YYYY/MM/DD"
+	  * 
+	  * @param date
+	  * @return
+	  */
+    private boolean isValidDateFormat(String date) {
+        try {
+        	// Use SimpleDateFormat to check the format
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+            sdf.setLenient(false);
+            sdf.parse(date);
+            return true;
+        } catch (ParseException e) {
+            // If there is a ParseException error, the format is incorrect
+            return false;
+        }
+    }
+    
+    
+    /**
+     * The function checks whether the start date is less than the end date
+     * 
+     * @param startDate Start day
+     * @param endDate   End day
+     * @return  Returns true if true
+     */
+    private boolean isStartDateBeforeEndDate(String startDate, String endDate) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+            Date start = sdf.parse(startDate);
+            Date end = sdf.parse(endDate);
+            return start.before(end);
+        } catch (ParseException e) {
+            // If there is a ParseException error, it is considered invalid
+            return false;
+        }
+    }
+	
+}
+
+
+
+
+
+
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+ <%@include file="../WEB-INF/common/Taglib.jsp" %>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title><bean:message key="search.title"/></title>
+<style type="text/css">
+	<%@include file="../WEB-INF/css/Base.css" %>
+	<%@include file="../WEB-INF/css/Search.css" %>
+</style>
+<script src="./src/js/Search.js"></script>
+</head>
+<body>
+<%@include file="../WEB-INF/common/Header.jsp" %>
+	<div class="search-container">
+		<div class="search-container__dan">
+				<div class="search-container__text">
+					Login > Search Customer
+				</div>
+			<div class="search-container__context">
+				<div class="search-container__logo">
+					<div>Welcome: <%=session.getAttribute("login")%> </div>
+				</div>
+				<a href="./Login.do" class="search-container__logout">Log Out</a>
+			</div>
+			<div class="search-container__line"></div>
+		<form id="form-Search" action="./Search.do" method="POST">
+			<div class="search-container__handalSearch">
+				<div class="search-padding__handalSearch">
+					<div class="search-container__handalSearch--margin handalSearch-customerName">
+					<div class="handalSearch-customercommon handalSearch-customerName__text">Customer Name</div>
+					<input id="txtCustomerName" class="input_Customer--common" name="userName" maxLength = "50" value="<logic:notEmpty name="name"><bean:write name='name'/></logic:notEmpty>"/>
+				</div>
+				<div class="search-container__handalSearch--margin handalSearch-customerSex">
+					<div class="handalSearch-customercommon handalSearch-customerSex__text">Sex</div>
+					<select name="sex" class="input_Customer--select" id="cboSex">
+					    <option value="">blank</option>
+					    <option value="0" <% if ("0".equals(request.getAttribute("sex"))) { %>selected<% } %>>Male</option>
+					    <option value="1" <% if ("1".equals(request.getAttribute("sex"))) { %>selected<% } %>>Female</option>
+					</select>
+				</div>
+					<div class="search-container__handalSearch--margin handalSearch-BirthdayFrom">
+						<div class="handalSearch-customercommon handalSearch-BirthdayFrom__text">Birthday</div>
+						<input id="txtBirthdayForm" class ="input_Customer--common txtCustomerValidateFROM" name ="brithFrom" maxLength ="10" value="<logic:notEmpty name="birthFromDay"><bean:write name='birthFromDay'/></logic:notEmpty>"/>
+						<label for="html" class="handalSearch-customercommon handalSearch-BirthdayFrom__ngangcach">～</label>
+						<input id="txtBirthdayTo" class="input_Customer--common txtCustomerValidateTO" name ="brithTo" maxLength ="10" value="<logic:notEmpty name="birthToDay"><bean:write name='birthToDay'/></logic:notEmpty>"/>	
+					</div>
+					<div class="handalSearch-btnSearch">
+						<button type="submit" name="sMode" value="Search" id="btnSearch">Search</button>
+					</div>
+				</div>
+			</div>
+			<div class="search-container__btnContext--chuyenhuong">
+			<input type="hidden" name="currentPage" value='<logic:notEmpty name="tag"><bean:write name="tag"/></logic:notEmpty>'/>
+		    <div class="search-container__btnContext--start">
+		    	<button name="sMode" <logic:notEmpty name="disBtn">disabled</logic:notEmpty> class="search-btn search-btn__startend " value="first">&lt;&lt;</button>
+	     		<button name="sMode" <logic:notEmpty name="disBtn">disabled</logic:notEmpty> class="search-btn search-btn__padding search-btn__soundstart" value="previous">&lt;</button>
+		        <label for="html" class="search-container__btnContext--textstart">Previous</label>
+		    </div>
+		    <div class="search-container__btnContext--end">
+		        <label for="html" class="search-container__btnContext--textend">Next</label>
+		     	<button type="submit" <logic:notEmpty name="disBtn">disabled</logic:notEmpty> class="search-btn search-btn__padding" name="sMode" value="next">&gt;</button>  
+		        <button type="submit" <logic:notEmpty name="disBtn">disabled</logic:notEmpty> class="search-btn search-btn__startend search-btn__soundend" name="sMode" value="last">&gt;&gt;</button>
+		    </div>
+		</div>
+	</form>
+	<form id="form-Search" action="./Delete.do" method="POST">
+		<div>
+		<table class="search-container__table">
+	        <tr class="search-container__table--tieude">
+	        	<th><input type="checkbox" id="checkAll" name="checkboxAll" value="" onclick="toggleAllCheckboxes()"></th>
+	            <th>Customer ID</th>
+	            <th>Customer Name</th>
+	            <th>Sex</th>
+	            <th>Birthday</th>
+	            <th>Address</th>
+	        </tr>
+		<logic:iterate id="dept" name="model" property="pageData">
+				    <tr>
+				        <td><input type="checkbox" name="selectedCustomers" value="<bean:write name='dept' property='customerId'/>"></td>
+				        <td>
+							<html:link action="/Edit">
+							    <bean:write name="dept" property="customerId" />
+							</html:link>
+				        </td>
+				        <td><bean:write name='dept' property='customerName' /></td>
+				        <td><bean:write name='dept' property='sex' /></td>
+				        <td><bean:write name='dept' property='birthDay' /></td>
+				        <td><bean:write name='dept' property='address' /></td>
+				    </tr>
+				</logic:iterate>
+	        
+    	</table>
+    	</div>
+		<div class="search-container__btnnav">
+			<a href="./save-user.do" class="search-container__nav-btnAdd">Add New</a>
+			<button type="submit" <logic:notEmpty name="disBtnDelete">disabled</logic:notEmpty> id="delete-btn" class="search-container__nav-btndelete">Delete </button>
+		</div>
+	</form>
+	</div>
+</div>
+<script>
+<% 
+	Boolean invalidDateFrom = (Boolean) request.getAttribute("invalidDateFrom");
+	if (invalidDateFrom != null && invalidDateFrom) {
+%>
+	alert(" Invalid Birthday (From).");
+<% } %>
+
+<% 
+	Boolean invalidDateTo = (Boolean) request.getAttribute("invalidDateTo");
+	if (invalidDateTo != null && invalidDateTo) {
+%>
+	alert(" Invalid Birthday (To).");
+<% } %>
+
+<% 
+	Boolean invalidDateRange = (Boolean) request.getAttribute("invalidDateRange");
+	if (invalidDateRange != null && invalidDateRange) {
+%>
+	alert("There is an error in the range input of Birthday");
+<% } %>
+
+<% 
+	Boolean checkDelete = (Boolean) request.getAttribute("recordCheckNull");
+	if (checkDelete != null && checkDelete) {
+%>
+	alert("行を選択してください。");
+<% } %>
+
+</script>
+<%@include file="../WEB-INF/common/Footer.jsp" %>	
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
  <%@include file="../WEB-INF/common/Taglib.jsp" %>
