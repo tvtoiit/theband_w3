@@ -1,3 +1,64 @@
+public List<MSTCUSTOMER> getCustomerSearchResults(SearchForm searchForm) {
+	    try {
+	        StringBuilder hql = new StringBuilder("FROM MSTCUSTOMER WHERE DELETE_YMD IS NULL");
+
+	        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty()) {
+	            hql.append(" AND CUSTOMER_NAME LIKE :name");
+	        }
+
+	        if (searchForm.getSex() != null && !searchForm.getSex().isEmpty()) {
+	            hql.append(" AND SEX = :sex");
+	        }
+
+	        if (searchForm.getBrithFrom() != null && !searchForm.getBrithFrom().isEmpty()) {
+	            hql.append(" AND BIRTHDAY >= :birthdayFrom");
+	        }
+
+	        if (searchForm.getBrithTo() != null && !searchForm.getBrithTo().isEmpty()) {
+	            hql.append(" AND BIRTHDAY <= :birthdayTo");
+	        }
+	        hql.append(" ORDER BY CUSTOMER_ID");
+
+	        Query query = getSession().createQuery(hql.toString());
+
+	        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty()) {
+	            query.setParameter("name", "%" + searchForm.getUserName() + "%");
+	        }
+
+	        if (searchForm.getSex() != null && !searchForm.getSex().isEmpty()) {
+	            query.setParameter("sex", searchForm.getSex());
+	        }
+
+	        if (searchForm.getBrithFrom() != null && !searchForm.getBrithFrom().isEmpty()) {
+	            query.setParameter("birthdayFrom", searchForm.getBrithFrom());
+	        }
+
+	        if (searchForm.getBrithTo() != null && !searchForm.getBrithTo().isEmpty()) {
+	            query.setParameter("birthdayTo", searchForm.getBrithTo());
+	        }
+	        query.setFirstResult(searchForm.getIndex());
+	        query.setMaxResults(Constants.TOTAL_ITEM);
+	        @SuppressWarnings("unchecked")
+			List<?> customers = query.list();
+	        
+	        for (Iterator<?> iterator = customers.iterator(); iterator.hasNext();) {
+	            MSTCUSTOMER customer = (MSTCUSTOMER) iterator.next();
+	            customer.setSex("0".equals(customer.getSex()) ? "Male" : "Female");
+
+	            customers.add(customer);
+	        }
+	        return customers;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+
+
+
+
+
+
 ---lưu giá trị giới tính
 <select name="sex" class="input_Customer--select" id="cboSex">
     <option value="">blank</option>
