@@ -1,4 +1,53 @@
 /**
+ * Process searches based on user criteria
+ * 
+ * @param searchForm    Form value of search screen
+ * @param searchResult  A input list to search
+ * @param request       HttpServletRequest object for setting attributes
+ * @return              Returns a search list, or null if there are validation errors
+ */
+private List<MSTCUSTOMER> handleSearch(SearchForm searchForm, SearchService searchResult, HttpServletRequest request) {
+    String birthdayFrom = searchForm.getBrithFrom();
+    String birthdayTo = searchForm.getBrithTo();
+
+    // Trường hợp 1: Nếu birthdayTo không hợp lệ
+    if (birthdayTo != null && !birthdayTo.isEmpty() && !isValidDateFormat(birthdayTo)) {
+        request.setAttribute("invalidDateTo", true);
+        return null;
+    }
+
+    // Trường hợp 2: Nếu birthdayFrom không hợp lệ
+    if (birthdayFrom != null && !birthdayFrom.isEmpty() && !isValidDateFormat(birthdayFrom)) {
+        request.setAttribute("invalidDateFrom", true);
+        return null;
+    }
+
+    // Trường hợp 3: Nếu cả birthdayFrom và birthdayTo không hợp lệ hoặc birthdayFrom lớn hơn birthdayTo
+    if ((birthdayFrom != null && !birthdayFrom.isEmpty() && !isValidDateFormat(birthdayFrom)) ||
+        (birthdayTo != null && !birthdayTo.isEmpty() && !isValidDateFormat(birthdayTo)) ||
+        (birthdayFrom != null && birthdayTo != null && !isStartDateBeforeEndDate(birthdayFrom, birthdayTo))) {
+        request.setAttribute("invalidDateRange", true);
+        return null;
+    }
+
+    // Nếu không có lỗi, thực hiện tìm kiếm và trả về kết quả
+    List<MSTCUSTOMER> resultSearch = searchResult.getCustomerSearchResults(searchForm);
+    return resultSearch;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
 	 * Process searches based on user criteria
 	 * 
 	 * @param searchForm 	Form value of search screen
