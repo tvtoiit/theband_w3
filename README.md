@@ -1,3 +1,58 @@
+/**
+	 * Process searches based on user criteria
+	 * 
+	 * @param searchForm 	Form value of search screen
+	 * @param searchResult  A input list to search
+	 * @return  			Returns a search list
+	 */
+	private List<MSTCUSTOMER> handleSearch(SearchForm searchForm, SearchService searchResult, HttpServletRequest request) {
+		String birthdayTo = searchForm.getBrithTo();
+		String birthdayFrom = searchForm.getBrithFrom();
+		if (birthdayTo != "" && birthdayTo != null && !isValidDateFormat(birthdayTo)) {
+            request.setAttribute("invalidDateTo", true);
+            return null; 
+        }
+		
+		if (birthdayFrom != "" && birthdayTo != null && !isValidDateFormat(birthdayFrom)) {
+			request.setAttribute("invalidDateFrom", true);
+			return null;
+		}
+		
+		 if (birthdayFrom != "" && birthdayTo != null && birthdayFrom != null && birthdayFrom != null && !isStartDateBeforeEndDate(birthdayFrom, birthdayTo)) {
+            // Nếu không, hiển thị thông báo và không thực hiện tìm kiếm
+            request.setAttribute("invalidDateRange", true);
+            return null; // Hoặc trả về null hoặc danh sách rỗng tùy thuộc vào yêu cầu của bạn
+         }
+		
+		
+		List<MSTCUSTOMER> resultSearch = searchResult.getCustomerSearchResults(searchForm);
+        return resultSearch;
+	 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public List<MSTCUSTOMER> getCustomerSearchResults(SearchForm searchForm) {
 	    try {
 	        StringBuilder hql = new StringBuilder("FROM MSTCUSTOMER WHERE DELETE_YMD IS NULL");
