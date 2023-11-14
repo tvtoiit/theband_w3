@@ -1,23 +1,29 @@
 public void updateCustomers(MSTCUSTOMER customer) {
-	    Transaction tx = null;
-	    try {
-	        tx = getSession().beginTransaction();
+    Transaction tx = null;
+    try {
+        tx = getSession().beginTransaction();
 
-	        String hql = "UPDATE MSTCUSTOMER SET CUSTOMER_NAME = ?, SEX = ?, BIRTHDAY = ?, EMAIL = ?, ADDRESS = ?, DELETE_YMD = NULL, UPDATE_YMD = CURRENT_TIMESTAMP WHERE CUSTOMER_ID = ?";
-	        Query query = getSession().createQuery(hql);
+        String hql = "UPDATE MSTCUSTOMER SET CUSTOMER_NAME = ?, SEX = ?, BIRTHDAY = ?, EMAIL = ?, ADDRESS = ?, DELETE_YMD = NULL, UPDATE_YMD = CURRENT_TIMESTAMP WHERE CUSTOMER_ID = ?";
+        Query query = getSession().createQuery(hql);
 
-	        // Place a list of values ​​in the parameter 'customerIds'
-	        query.setParameter("customerId", customer.getCustomerId());
+        // Set parameters using positional notation
+        query.setParameter(0, customer.getCustomerName());
+        query.setParameter(1, customer.getSex());
+        query.setParameter(2, customer.getBirthday());
+        query.setParameter(3, customer.getEmail());
+        query.setParameter(4, customer.getAddress());
+        query.setParameter(5, customer.getCustomerId());
 
-	        query.executeUpdate();
-	        tx.commit();
-	    } catch (Exception e) {
-	        if (tx != null) {
-	        	tx.rollback();
-	        }
-	        e.printStackTrace();
-	    } 
-	}
+        query.executeUpdate();
+        tx.commit();
+    } catch (Exception e) {
+        if (tx != null) {
+            tx.rollback();
+        }
+        e.printStackTrace();
+    } 
+}
+
 
 
 
