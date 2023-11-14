@@ -1,3 +1,38 @@
+<form id="form-Search" action="./Delete.do" method="POST">
+		<div>
+		<table class="search-container__table">
+	        <tr class="search-container__table--tieude">
+	        	<th><input type="checkbox" id="checkAll" name="checkboxAll" value="" onclick="toggleAllCheckboxes()"></th>
+	            <th>Customer ID</th>
+	            <th>Customer Name</th>
+	            <th>Sex</th>
+	            <th>Birthday</th>
+	            <th>Address</th>
+	        </tr>
+		<logic:iterate id="dept" name="model" property="pageData">
+				    <tr>
+				        <td><input type="checkbox" name="selectedCustomers" value="<bean:write name='dept' property='customerId'/>"></td>
+				        <td>
+							<html:link action="/Edit">
+							    <bean:write name="dept" property="customerId" />
+							</html:link>
+				        </td>
+				        <td><bean:write name='dept' property='customerName' /></td>
+				        <td><bean:write name='dept' property='sex' /></td>
+				        <td><bean:write name='dept' property='birthDay' /></td>
+				        <td><bean:write name='dept' property='address' /></td>
+				    </tr>
+				</logic:iterate>
+	        
+    	</table>
+    	</div>
+		<div class="search-container__btnnav">
+			<a href="./save-user.do" class="search-container__nav-btnAdd">Add New</a>
+			<button type="submit" name="deleteAction" value="delete" <logic:notEmpty name="disableDelete">disabled</logic:notEmpty> id="delete-btn" class="search-btn search-container__nav-btndelete">Delete </button>
+		</div>
+	</form>
+
+
 <button type="submit" name="deleteAction" value="delete" <logic:notEmpty name="disableDelete">disabled</logic:notEmpty> id="delete-btn" class="search-btn search-container__nav-btndelete">Delete </button>
 
 
