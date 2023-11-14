@@ -1,3 +1,42 @@
+<script type="text/javascript">
+    function validateDelete() {
+        // Lấy tất cả các checkbox với name="selectedCustomers"
+        var checkboxes = document.getElementsByName("selectedCustomers");
+
+        // Biến kiểm tra xem có ít nhất một checkbox được chọn hay không
+        var atLeastOneChecked = false;
+
+        // Duyệt qua tất cả các checkbox để kiểm tra
+        for (var i = 0; i < checkboxes.length; i++) {
+            if (checkboxes[i].checked) {
+                atLeastOneChecked = true;
+                break; // Nếu có ít nhất một checkbox được chọn, thoát khỏi vòng lặp
+            }
+        }
+
+        // Kiểm tra giá trị của biến atLeastOneChecked
+        if (!atLeastOneChecked) {
+            // Hiển thị thông báo nếu không có checkbox nào được chọn
+            alert("Please select at least one customer to delete.");
+            return false; // Ngăn chặn việc submit form
+        }
+
+        // Nếu có ít nhất một checkbox được chọn, cho phép submit form
+        return true;
+    }
+</script>
+
+
+
+<button type="submit" name="deleteAction" value="delete" onclick="return validateDelete()" <logic:notEmpty name="disableDelete">disabled</logic:notEmpty> id="delete-btn" class="search-btn search-container__nav-btndelete">Delete </button>
+
+
+
+
+
+
+
+
 <form id="form-Search" action="./Delete.do" method="POST">
 		<div>
 		<table class="search-container__table">
