@@ -1,3 +1,58 @@
+<input id="txtBirthdayForm" class ="input_Customer--common txtCustomerValidateFROM" name ="brithFrom" maxLength ="10" value="<logic:notEmpty name="birthFromDay"><bean:write name='birthFromDay'/></logic:notEmpty>"/>
+<label for="html" class="handalSearch-customercommon handalSearch-BirthdayFrom__ngangcach">～</label>
+<input id="txtBirthdayTo" class="input_Customer--common txtCustomerValidateTO" name ="brithTo" maxLength ="10" value="<logic:notEmpty name="birthToDay"><bean:write name='birthToDay'/></logic:notEmpty>"/>	
+
+
+
+
+
+<form id="form-Search" action="./Search.do" method="POST">
+			<div class="search-container__handalSearch">
+				<div class="search-padding__handalSearch">
+					<div class="search-container__handalSearch--margin handalSearch-customerName">
+					<div class="handalSearch-customercommon handalSearch-customerName__text">Customer Name</div>
+					<input id="txtCustomerName" class="input_Customer--common" name="userName" maxLength = "50" value="<logic:notEmpty name="name"><bean:write name='name'/></logic:notEmpty>"/>
+				</div>
+				<div class="search-container__handalSearch--margin handalSearch-customerSex">
+					<div class="handalSearch-customercommon handalSearch-customerSex__text">Sex</div>
+					<select name="sex" class="input_Customer--select" id="cboSex">
+					    <option value=""></option>
+					    <option value="0" <% if ("0".equals(request.getAttribute("sex"))) { %>selected<% } %>>Male</option>
+					    <option value="1" <% if ("1".equals(request.getAttribute("sex"))) { %>selected<% } %>>Female</option>
+					</select>
+				</div>
+					<div class="search-container__handalSearch--margin handalSearch-BirthdayFrom">
+						<div class="handalSearch-customercommon handalSearch-BirthdayFrom__text">Birthday</div>
+						<input id="txtBirthdayForm" class ="input_Customer--common txtCustomerValidateFROM" name ="brithFrom" maxLength ="10" value="<logic:notEmpty name="birthFromDay"><bean:write name='birthFromDay'/></logic:notEmpty>"/>
+						<label for="html" class="handalSearch-customercommon handalSearch-BirthdayFrom__ngangcach">～</label>
+						<input id="txtBirthdayTo" class="input_Customer--common txtCustomerValidateTO" name ="brithTo" maxLength ="10" value="<logic:notEmpty name="birthToDay"><bean:write name='birthToDay'/></logic:notEmpty>"/>	
+					</div>
+					<div class="handalSearch-btnSearch">
+						<button type="submit" name="sMode" value="Search" id="btnSearch">Search</button>
+					</div>
+				</div>
+			</div>
+			<div class="search-container__btnContext--chuyenhuong">
+			<input type="hidden" name="currentPage" value='<logic:notEmpty name="tag"><bean:write name="tag"/></logic:notEmpty>'/>
+		    <div class="search-container__btnContext--start">
+		    	<button name="sMode" <logic:notEmpty name="disableFirst">disabled</logic:notEmpty> class="search-btn search-btn__startend " value="first">&lt;&lt;</button>
+	     		<button name="sMode" <logic:notEmpty name="disablePrevious">disabled</logic:notEmpty> class="search-btn search-btn__padding search-btn__soundstart" value="previous">&lt;</button>
+		        <label for="html" class="search-container__btnContext--textstart">Previous</label>
+		    </div>
+		    <div class="search-container__btnContext--end">
+		        <label for="html" class="search-container__btnContext--textend">Next</label>
+		     	<button type="submit" <logic:notEmpty name="disableNext">disabled</logic:notEmpty> class="search-btn search-btn__padding" name="sMode" value="next">&gt;</button>  
+		        <button type="submit" <logic:notEmpty name="disableLast">disabled</logic:notEmpty> class="search-btn search-btn__startend search-btn__soundend" name="sMode" value="last">&gt;&gt;</button>
+		    </div>
+		</div>
+	</form>
+
+
+
+
+
+
+
 <script type="text/javascript">
     function validateDelete() {
         // Lấy tất cả các checkbox với name="selectedCustomers"
