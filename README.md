@@ -1,3 +1,64 @@
+public Long countCustomerSearchResults(SearchForm searchForm) {
+    try {
+        StringBuilder hql = new StringBuilder("SELECT COUNT(*) FROM MSTCUSTOMER WHERE DELETE_YMD IS NULL");
+
+        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty()) {
+            hql.append(" AND CUSTOMER_NAME LIKE :name");
+        }
+
+        if (searchForm.getSex() != null && !searchForm.getSex().isEmpty()) {
+            hql.append(" AND SEX = :sex");
+        }
+
+        if (searchForm.getBrithFrom() != null && !searchForm.getBrithFrom().isEmpty()) {
+            hql.append(" AND BIRTHDAY >= :birthdayFrom");
+        }
+
+        if (searchForm.getBrithTo() != null && !searchForm.getBrithTo().isEmpty()) {
+            hql.append(" AND BIRTHDAY <= :birthdayTo");
+        }
+
+        Query countQuery = getSession().createQuery(hql.toString());
+
+        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty()) {
+            countQuery.setParameter("name", "%" + searchForm.getUserName() + "%");
+        }
+
+        if (searchForm.getSex() != null && !searchForm.getSex().isEmpty()) {
+            countQuery.setParameter("sex", searchForm.getSex());
+        }
+
+        if (searchForm.getBrithFrom() != null && !searchForm.getBrithFrom().isEmpty()) {
+            countQuery.setParameter("birthdayFrom", searchForm.getBrithFrom());
+        }
+
+        if (searchForm.getBrithTo() != null && !searchForm.getBrithTo().isEmpty()) {
+            countQuery.setParameter("birthdayTo", searchForm.getBrithTo());
+        }
+
+        Long totalCount = (Long) countQuery.uniqueResult();
+        return totalCount;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return null;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public List<MSTCUSTOMER> countCustomerSearchResults(SearchForm searchForm) {
 	    try {
 	        StringBuilder hql = new StringBuilder("SELECT COUNT(*) FROM MSTCUSTOMER WHERE DELETE_YMD IS NULL");
