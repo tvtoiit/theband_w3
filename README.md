@@ -1,3 +1,52 @@
+
+ public void insertCustomer(MSTCUSTOMER customer) {
+        Transaction tx = null;
+        try {
+            tx = getSession().beginTransaction();
+
+            // Assuming MSTCUSTOMER class has corresponding properties and getters
+            String hql = "INSERT INTO MSTCUSTOMER (CUSTOMER_NAME, SEX, BIRTHDAY, EMAIL, ADDRESS, DELETE_YMD, INSERT_YMD, INSERT_PSN_CD, UPDATE_YMD, UPDATE_PSN_CD) " +
+                         "VALUES (:customerName, :sex, :birthday, :email, :address, NULL, CURRENT_TIMESTAMP, :insertPsnCd, CURRENT_TIMESTAMP, :updatePsnCd)";
+
+            Query query = getSession().createQuery(hql);
+
+            // Set parameters using named parameters
+            query.setParameter("customerName", customer.getCustomerName());
+            query.setParameter("sex", customer.getSex());
+            query.setParameter("birthday", customer.getBirthday());
+            query.setParameter("email", customer.getEmail());
+            query.setParameter("address", customer.getAddress());
+            query.setParameter("insertPsnCd", customer.getInsertPsnCd());
+            query.setParameter("updatePsnCd", customer.getUpdatePsnCd());
+
+            query.executeUpdate();
+            tx.commit();
+        } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } 
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public void updateCustomers(MSTCUSTOMER customer) {
     Transaction tx = null;
     try {
