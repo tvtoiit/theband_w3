@@ -1,3 +1,29 @@
+public void updateCustomers(MSTCUSTOMER customer) {
+	    Transaction tx = null;
+	    try {
+	        tx = getSession().beginTransaction();
+
+	        String hql = "UPDATE MSTCUSTOMER SET CUSTOMER_NAME = ?, SEX = ?, BIRTHDAY = ?, EMAIL = ?, ADDRESS = ?, DELETE_YMD = NULL, UPDATE_YMD = CURRENT_TIMESTAMP WHERE CUSTOMER_ID = ?";
+	        Query query = getSession().createQuery(hql);
+
+	        // Place a list of values ​​in the parameter 'customerIds'
+	        query.setParameter("customerId", customer.getCustomerId());
+
+	        query.executeUpdate();
+	        tx.commit();
+	    } catch (Exception e) {
+	        if (tx != null) {
+	        	tx.rollback();
+	        }
+	        e.printStackTrace();
+	    } 
+	}
+
+
+
+
+
+
 public Long countCustomerSearchResults(SearchForm searchForm) {
     try {
         StringBuilder hql = new StringBuilder("SELECT COUNT(*) FROM MSTCUSTOMER WHERE DELETE_YMD IS NULL");
