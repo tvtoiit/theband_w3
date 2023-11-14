@@ -1,3 +1,68 @@
+public List<MSTCUSTOMER> countCustomerSearchResults(SearchForm searchForm) {
+	    try {
+	        StringBuilder hql = new StringBuilder("SELECT COUNT(*) FROM MSTCUSTOMER WHERE DELETE_YMD IS NULL");
+	        
+	        //If the user searches by any condition, that condition will be appended
+	        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty()) {
+	            hql.append(" AND CUSTOMER_NAME LIKE :name");
+	        }
+
+	        if (searchForm.getSex() != null && !searchForm.getSex().isEmpty()) {
+	            hql.append(" AND SEX = :sex");
+	        }
+
+	        if (searchForm.getBrithFrom() != null && !searchForm.getBrithFrom().isEmpty()) {
+	            hql.append(" AND BIRTHDAY >= :birthdayFrom");
+	        }
+
+	        if (searchForm.getBrithTo() != null && !searchForm.getBrithTo().isEmpty()) {
+	            hql.append(" AND BIRTHDAY <= :birthdayTo");
+	        }
+	        
+	        hql.append(" ORDER BY CUSTOMER_ID");
+
+	        Query query = getSession().createQuery(hql.toString());
+
+	        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty()) {
+	            query.setParameter("name", "%" + searchForm.getUserName() + "%");
+	        }
+
+	        if (searchForm.getSex() != null && !searchForm.getSex().isEmpty()) {
+	            query.setParameter("sex", searchForm.getSex());
+	        }
+
+	        if (searchForm.getBrithFrom() != null && !searchForm.getBrithFrom().isEmpty()) {
+	            query.setParameter("birthdayFrom", searchForm.getBrithFrom());
+	        }
+
+	        if (searchForm.getBrithTo() != null && !searchForm.getBrithTo().isEmpty()) {
+	            query.setParameter("birthdayTo", searchForm.getBrithTo());
+	        }
+	        
+	        //Paging conditions
+	        query.setFirstResult(searchForm.getIndex());
+	        query.setMaxResults(Constants.TOTAL_ITEM);
+	        
+	        @SuppressWarnings("unchecked")
+			List<MSTCUSTOMER> customers = query.list();
+	        return customers;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 <input id="txtBirthdayForm" class ="input_Customer--common txtCustomerValidateFROM" name ="brithFrom" maxLength ="10" value="<logic:notEmpty name="birthFromDay"><bean:write name='birthFromDay'/></logic:notEmpty>"/>
 <label for="html" class="handalSearch-customercommon handalSearch-BirthdayFrom__ngangcach">～</label>
 <input id="txtBirthdayTo" class="input_Customer--common txtCustomerValidateTO" name ="brithTo" maxLength ="10" value="<logic:notEmpty name="birthToDay"><bean:write name='birthToDay'/></logic:notEmpty>"/>	
