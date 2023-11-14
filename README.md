@@ -1,3 +1,24 @@
+<button type="submit" name="deleteAction" value="delete" <logic:notEmpty name="disableDelete">disabled</logic:notEmpty> id="delete-btn" class="search-btn search-container__nav-btndelete">Delete </button>
+
+
+<logic:iterate id="dept" name="model" property="pageData">
+    <tr>
+	<td><input type="checkbox" name="selectedCustomers" value="<bean:write name='dept' property='customerId'/>"></td>
+	<td>
+			<html:link action="/Edit">
+			    <bean:write name="dept" property="customerId" />
+			</html:link>
+	</td>
+	<td><bean:write name='dept' property='customerName' /></td>
+	<td><bean:write name='dept' property='sex' /></td>
+	<td><bean:write name='dept' property='birthDay' /></td>
+	<td><bean:write name='dept' property='address' /></td>
+    </tr>
+</logic:iterate>
+
+
+
+
 <!-- Customer.hbm.xml -->
 <hibernate-mapping>
     <class name="com.example.Customer" table="MSTCUSTOMER">
