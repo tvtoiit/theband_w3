@@ -1,3 +1,41 @@
+<%@ page import="your.package.UserClass" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Display User Name</title>
+</head>
+<body>
+
+<%
+    // Retrieve the user object from the session
+    UserClass user = (UserClass) session.getAttribute("user");
+
+    // Check if the user object is not null
+    if (user != null) {
+        // Access the userName property of the user object
+        String userName = user.getUserName();
+%>
+        <!-- Display the userName in the HTML -->
+        <p>Welcome, <%= userName %>!</p>
+<%
+    } else {
+%>
+        <p>User not found in session</p>
+<%
+    }
+%>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
