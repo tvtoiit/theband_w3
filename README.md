@@ -1,3 +1,52 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="fjs.cs.model.MSTCUSTOMER" table="MSTCUSTOMER">
+        <id name="customerId" type="int">
+            <column name="CUSTOMER_ID" />
+            <generator class="assigned" />
+            <generator class="native"/>
+        </id>
+        <property name="customerName" type="string">
+            <column name="CUSTOMER_NAME" length="50" />
+        </property>
+        <property name="sex" type="string">
+            <column name="SEX" length="1" />
+        </property>
+        <property name="birthDay" type="string">
+            <column name="BIRTHDAY" length="10" />
+        </property>
+        <property name="email" type="string">
+            <column name="EMAIL" length="40" />
+        </property>
+        <property name="address" type="string">
+            <column name="ADDRESS" length="256" />
+        </property>
+        <property name="deleteYMD" type="timestamp">
+            <column name="DELETE_YMD" />
+        </property>
+        <property name="insertYMD" type="timestamp">
+            <column name="INSERT_YMD" />
+        </property>
+        <property name="insertPSNCD" type="int">
+            <column name="INSERT_PSN_CD" />
+        </property>
+        <property name="updateYMD" type="timestamp">
+            <column name="UPDATE_YMD" />
+        </property>
+        <property name="updatePSNCD" type="int">
+            <column name="UPDATE_PSN_CD" />
+        </property>
+    </class>
+</hibernate-mapping>
+
+
+
+
+
+
+
 BigDecimal loggedInPsnCd = ms.getPsnCd();
 session.setAttribute("loggedInPsnCd", loggedInPsnCd);
 
