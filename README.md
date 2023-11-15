@@ -1,3 +1,108 @@
+<!-- Customer.hbm.xml -->
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="your.package.containing.entities">
+
+    <class name="Customer" table="MSTCUSTOMER">
+
+        <id name="customerId" type="long">
+            <column name="customer_id"/>
+            <generator class="sequence">
+                <param name="sequence">SEQ_CUSTOMER_ID</param>
+            </generator>
+        </id>
+
+        <property name="customerName" type="string">
+            <column name="customer_name"/>
+        </property>
+
+        <!-- Các trường khác -->
+
+    </class>
+
+</hibernate-mapping>
+
+
+
+SỬ DỤNG 
+public void addCustomer(Customer customer) {
+        Session session = null;
+        Transaction transaction = null;
+
+        try {
+            session = sessionFactory.openSession();
+            transaction = session.beginTransaction();
+
+            // Thêm customer vào cơ sở dữ liệu
+            session.save(customer);
+
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+<logic:notEmpty name="check">
+	<script>
+    		alert("<bean:write name='check' />");
+	</script>
+</logic:notEmpty>
+
+-----------------------------
+<script>
+    function validateForm() {
+        var birthdayInput = document.getElementById('txtCustomerBirthday');
+        var emailInput = document.getElementById('txtCustomerEmail');
+        var errorMessageDiv = document.getElementById('error-message');
+
+        // Kiểm tra định dạng birthday
+        var birthdayRegex = /^\d{4}\/\d{2}\/\d{2}$/;
+        if (!birthdayRegex.test(birthdayInput.value)) {
+            errorMessageDiv.innerText = 'Không đúng định dạng ngày sinh (YYYY/MM/DD)';
+            return false; // Ngừng xử lí và không submit form
+        }
+
+        // Kiểm tra định dạng email
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailInput.value)) {
+            errorMessageDiv.innerText = 'Không đúng định dạng email';
+            return false; // Ngừng xử lí và không submit form
+        }
+
+        // Nếu tất cả kiểm tra thành công, trả về true để submit form
+        return true;
+    }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
 
  public void insertCustomer(MSTCUSTOMER customer) {
         Transaction tx = null;
