@@ -1,3 +1,14 @@
+BigDecimal loggedInPsnCd = ms.getPsnCd();
+session.setAttribute("loggedInPsnCd", loggedInPsnCd);
+
+
+// Lấy giá trị loggedInPsnCd từ session T001
+HttpSession session = request.getSession();
+BigDecimal loggedInPsnCd = (BigDecimal) session.getAttribute("loggedInPsnCd");
+
+
+
+
 <!-- Customer.hbm.xml -->
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
