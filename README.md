@@ -1,3 +1,35 @@
+
+---------validate
+@Override
+	public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+		ActionErrors errors = new ActionErrors();
+		
+		// Kiểm tra userId không được để trống
+		if (userId == null || userId.trim().isEmpty()) {
+	        errors.add("userId", new ActionMessage("error.required.userId"));
+	    }
+		
+		// Kiểm tra passWord không được để trống
+		if (passWord == null || passWord.trim().isEmpty()) {
+	        errors.add("passWord", new ActionMessage("error.required.passWord"));
+	    }
+		request.setAttribute("errors", errors);
+		return errors;
+	}
+
+
+
+-------------check
+ActionErrors errors = new ActionErrors();
+errors.add("login", new ActionMessage("message.error.user.not.exit"));
+
+
+
+
+
+
+
+
 check data ---------------
 
 package fjs.cs.action;
