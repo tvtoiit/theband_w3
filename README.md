@@ -1,3 +1,85 @@
+----------IMPORT UI
+
+<div class="main-container">
+	<input type="text" id="importText" name="import" readonly />
+	<label for="fileInput" class="customButton">Browse</label>
+	<input type="file" id="fileInput" style="display: none;" />
+</div>
+
+
+
+
+
+
+
+
+public void handleExport(HttpServletRequest request, HttpServletResponse response, mstcustomer t002Form, T002DaoImp impT002) {
+        try {
+            String name = t002Form.getTxtCustomerName();
+            String sex = t002Form.getSex();
+            String birthdayFrom = t002Form.getTxtBirthdayFromName();
+            String birthdayTo = t002Form.getTxtBirthdayToName();
+            List<mstcustomer> dataToExport = impT002.getDataSearch(name, sex, birthdayFrom, birthdayTo);
+
+            // Thiết lập các thông số cho HTTP response để trình duyệt hiểu được là file CSV
+            response.setContentType("text/csv");
+            response.setHeader("Content-Disposition", "attachment; filename=\"exported_data.csv\"");
+
+            // Ghi dữ liệu ra OutputStream của response
+            PrintWriter writer = response.getWriter();
+
+            // Ghi dòng header của file CSV (tên cột) với định dạng bao bọc bởi dấu ngoặc kép
+            writer.println("\"Customer Name\",\"Sex\",\"Birthday\"");
+
+            // Ghi dữ liệu từ danh sách vào file CSV với định dạng bao bọc bởi dấu ngoặc kép
+            for (mstcustomer customer : dataToExport) {
+                writer.println("\"" + customer.getCustomerName() + "\",\"" + customer.getSex() + "\",\"" + customer.getBirthDay() + "\"");
+            }
+
+            // Đóng writer
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <%@ page import="your.package.UserClass" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
