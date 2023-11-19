@@ -1,15 +1,218 @@
-----------IMPORT UI
+check data ---------------
 
-<div class="main-container">
-	<input type="text" id="importText" name="import" readonly />
-	<label for="fileInput" class="customButton">Browse</label>
-	<input type="file" id="fileInput" style="display: none;" />
-</div>
+package fjs.cs.action;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.struts.action.Action;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.tomcat.util.http.fileupload.FileItemIterator;
+import org.apache.tomcat.util.http.fileupload.FileItemStream;
+import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
+
+import fjs.cs.dao.impl.T004DaoImp;
+import fjs.cs.dto.mstcustomer;
+
+public class T004 extends Action {
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		mstcustomer t004Form = (mstcustomer)form;
+		String action = t004Form.getAction();
+		
+		
+		if ("import".equals(action)) {
+			// Kiểm tra xem request có phải là multipart không
+            boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+			T004DaoImp t004Dao = new T004DaoImp();
+			if (isMultipart) {
+                try {
+                    // Tạo một factory để xử lý file upload
+                    DiskFileItemFactory factory = new DiskFileItemFactory();
+
+                    // Tạo một đối tượng upload handler
+                    ServletFileUpload upload = new ServletFileUpload(factory);
+
+                    // Phân tích request thành các items
+                    FileItemIterator iter = upload.getItemIterator(request);
+
+                    // Lặp qua các items và xử lý
+                    while (iter.hasNext()) {
+                        FileItemStream item = iter.next();
+                        InputStream fileContent = item.openStream();
+
+                        if (!item.isFormField()) {
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(fileContent));
+                            String line;
+                            int lineNumber = 1; // Dòng bắt đầu từ 1
+                            List<mstcustomer> listResult = t004Dao.getAll();
+
+                            while ((line = reader.readLine()) != null) {
+                                // Xử lý từng dòng của file ở đây
+                                String[] columns = line.split(",");
+
+                                // Kiểm tra hợp lệ cho từng dòng
+                                if (!isRowValid(columns[0], columns[1], listResult)) {
+                                    System.out.println("Line " + lineNumber + " is invalid");
+                                    // Hiển thị alert hoặc thực hiện xử lý khác tùy ý
+                                }
+
+                                lineNumber++;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+	        
+		}
+		
+		
+		return mapping.findForward("false");
+	}
+	
+	private boolean isRowValid(String customerId, String customerName, List<mstcustomer> listResult) {
+        // Kiểm tra CUSTOMER_ID
+        if (customerId != null && !customerId.trim().isEmpty()) {
+            // Nếu CUSTOMER_ID không rỗng, kiểm tra xem có tồn tại trong listResult không
+            if (!isCustomerIdValid(customerId, listResult)) {
+                System.out.println("Line CUSTOMER_ID is null or doesn't exist");
+                return false;
+            }
+        } else {
+            // Nếu CUSTOMER_ID rỗng, thông báo lỗi
+            System.out.println("Line CUSTOMER_ID is null or empty");
+            return false;
+        }
+
+        // Kiểm tra CUSTOMER_NAME
+        if (customerName == null || customerName.trim().isEmpty()) {
+            // Nếu CUSTOMER_NAME rỗng, thông báo lỗi
+            System.out.println("Line CUSTOMER_NAME is empty");
+            return false;
+        }
+
+        // Nếu không có lỗi, trả về true
+        return true;
+    }
+	
+	private boolean isCustomerIdValid(String customerId, List<mstcustomer> listResult) {
+        // Viết logic kiểm tra CUSTOMER_ID có tồn tại trong listResult không
+        for (mstcustomer customer : listResult) {
+            if (customerId.equals(customer.getCustomerId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
 
 
+------------------form 
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@include file="../common/taglib.jsp" %>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Login - Training</title>
+<style type="text/css">
+	<%@include file="../WEB-INF/css/T001.css" %>
+</style>
+</head>
+<style>
+	.main-container {
+    position: relative;
+	}
+	
+	.customButton {
+	    position: absolute;
+	    top: 0;
+	    right: 0;
+	    padding: 10px 15px;
+	    background-color: #4CAF50;
+	    color: white;
+	    cursor: pointer;
+	    border: none;
+	    border-radius: 5px;
+	}
+
+</style>
+<body>
+<%@include file="../common/web/header.jsp" %>
+
+<form id="form-import" action="./import.do" method="POST" enctype="multipart/form-data" onsubmit="return handleImport()">
+	<div class="main-container">
+        <input type="text" id="importText" name="importText" readonly />
+        <label for="fileInput" class="customButton">Browse</label>
+        <input type="file" id="fileInput" style="display: none;" />
+    </div>
+	 <div class="btn-import">
+         <button id="importButton" name="action" value="import">Import</button>
+         <button type="button" id="cancelButton">Cancel</button>
+     </div>
+</form>
+	
+<%@include file="../common/web/footer.jsp" %>
+<script>
+	document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+	    
+	function handleFileSelect() {
+	    var fileInput = document.getElementById('fileInput');
+	    var importText = document.getElementById('importText');
+
+	    // Lấy tên file từ input file
+	    var fileName = fileInput.files[0].name;
+
+	    // Hiển thị tên file trong input text
+	    importText.value = fileName;
+	}
+	function handleImport() {
+	    var fileInput = document.getElementById('fileInput');
+	    var importText = document.getElementById('importText');
+	
+	    // Kiểm tra nếu không có file import
+	    if (fileInput.files.length === 0) {
+	        alert("File import is not existed!");
+	        return false;
+	    }
+	
+	    // Kiểm tra phần mở rộng của file
+	    var fileName = fileInput.files[0].name;
+	    var fileExtension = fileName.split('.').pop().toLowerCase();
+	    if (fileExtension !== 'csv') {
+	        alert("File import is invalid");
+	        return false;
+	    }
+	
+	    // Kiểm tra kích thước hoặc nội dung của file import
+	    if (fileInput.files[0].size === 0) {
+	        alert("File import is empty");
+	        return false;
+	    }
+	    
+	    return true;
+	}
+</script>
 
 
+</body>
+</html>
 
+------------------------------
 
 
 
