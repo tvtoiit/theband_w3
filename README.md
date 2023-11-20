@@ -1,3 +1,68 @@
+----------------**OK******
+public List<mstcustomer> getDataSearch(String name, String sex, String birthdayFrom, String birthdayTo) {
+	    StringBuilder query = new StringBuilder("SELECT CUSTOMER_ID, CUSTOMER_NAME, CASE WHEN SEX = 0 THEN 'Male' else 'Female' end as SEX, BIRTHDAY, ADDRESS ")
+	            .append("FROM MSTCUSTOMER ")
+	            .append("WHERE DELETE_YMD IS NULL");
+
+	    // Danh sách tham số sẽ được sử dụng trong truy vấn SQL
+	    List<Object> parameters = new ArrayList<>();
+
+	    // Thêm điều kiện tìm kiếm theo tên nếu tên có
+	    if (name != null && !name.isEmpty()) {
+	        if (name.equals("%")) {
+	            // Nếu giá trị tìm kiếm là '%', thì chỉ hiển thị những bản ghi có chứa dấu '%'
+	            query.append(" AND POSITION('%' IN CUSTOMER_NAME) > 0");
+	        } else {
+	            query.append(" AND CUSTOMER_NAME LIKE ?");
+	            parameters.add("%" + name + "%");
+	        }
+	    }
+
+	    // Thêm điều kiện tìm kiếm theo giới tính nếu giới tính nếu có
+	    if (sex != null && !sex.isEmpty()) {
+	        query.append(" AND SEX = ?");
+	        parameters.add(sex);
+	    }
+
+	    // Thêm điều kiện tìm kiếm theo ngày sinh bắt đầu nếu có
+	    if (birthdayFrom != null && !birthdayFrom.isEmpty()) {
+	        query.append(" AND BIRTHDAY >= ?");
+	        parameters.add(birthdayFrom);
+	    }
+
+	    // Thêm điều kiện tìm kiếm theo ngày sinh kết thúc nếu có
+	    if (birthdayTo != null && !birthdayTo.isEmpty()) {
+	        query.append(" AND BIRTHDAY <= ?");
+	        parameters.add(birthdayTo);
+	    }
+
+	    // Sắp xếp kết quả theo CUSTOMER_ID
+	    query.append(" ORDER BY CUSTOMER_ID");
+
+	    // Thực hiện truy vấn SQL và trả về danh sách khách hàng
+	    return query(query.toString(), new T002Mapper(), parameters.toArray());
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
 * Copyright(c) Fujinet Co., Ltd.
 * All rights reserved. 
