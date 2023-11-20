@@ -1,12 +1,196 @@
-<html:errors />
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
+* @(#)SearchAction.java 01-00 2023/11/13
+* 
+* Version 1.00
+* Last_Update 2023/11/13
+*/
+package fjs.cs.action;
 
-<!-- Thêm mã JavaScript để hiển thị alert khi có lỗi -->
-<script>
-    var errors = document.getElementById("errors");
-    if (errors != null && errors.childNodes.length > 0) {
-        alert("Có lỗi xảy ra: " + errors.innerHTML);
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.springframework.web.struts.ActionSupport;
+
+import fjs.cs.common.Constants;
+import fjs.cs.form.SearchForm;
+import fjs.cs.model.MSTCUSTOMER;
+import fjs.cs.model.MSTUSER;
+import fjs.cs.service.SearchService;
+/**
+ * SearchAction
+ * 
+ * This class performs searching and paging
+ * 
+ * @version 1.00
+ * @since 1.00
+ * @author toi-tv
+ */
+public class SearchAction extends ActionSupport {
+	
+	/**
+	 * Perform search and pagination
+	 *
+	 * @param mapping   An ActionMapping object that contains information about the mapping of the Action.
+	 * @param form      An ActionForm object that holds the search request data.
+	 * @param request   An HttpServletRequest object that contains information about the HTTP request.
+	 * @param response  An HttpServletResponse object that contains information about the HTTP response.
+	 * @return          An ActionForward object indicating the forward path for the request.
+	 * @throws Exception    If any exception occurs during the execution of the method.
+	 */
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		SearchForm searchForm = (SearchForm) form;
+		String modeSearch = searchForm.getsMode();
+		HttpSession session = request.getSession(true);
+		
+		List<MSTCUSTOMER> cus = null;
+		String currentPageStr = null;
+		int currentPage;
+		int page = 0;
+		 
+		SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
+		MSTCUSTOMER customer = new MSTCUSTOMER();
+		
+		if(!Constants.MODE_SEARCH.equals(modeSearch)) {
+			currentPageStr = searchForm.getCurrentPage();
+		} 
+		
+		//Display userName
+		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+		if (userLoginSuccess != null) {
+			request.setAttribute("userLoginSuccess", userLoginSuccess.getUserName());	
+		} else {
+			return mapping.findForward(Constants.FORWARD_SUCCESS);
+		}
+		
+		//if other formsearch is null then perform the job of saving the search value
+		if (searchForm != null) {
+			request.setAttribute("name", searchForm.getUserName());
+			request.setAttribute("sex", searchForm.getSex());
+			request.setAttribute("birthToDay", searchForm.getBrithTo());
+			request.setAttribute("birthFromDay", searchForm.getBrithFrom());
+		}
+		
+		//If there is a current page, take out page one
+		if (currentPageStr != null && !currentPageStr.isEmpty()) {
+			currentPage = Integer.parseInt(currentPageStr);
+		} else {
+			currentPage = Constants.PAGE_ONE;
+		}
+		
+		//Get the total number of search results items
+		int pageCount = totalPage(customerService, searchForm);
+			
+		page = getAction(currentPage, searchForm, pageCount);
+		
+		//Calculate the index position value to display the page number
+		int indexPage = (page-1)*Constants.TOTAL_ITEM;
+		searchForm.setIndex(indexPage);
+		
+		cus = handleSearch(searchForm, customerService, request);
+		
+		request.setAttribute("tag", page);
+		customer.setPageData(cus);
+		request.setAttribute("pageMax", pageCount);
+		request.setAttribute("model", customer);
+
+		//Display buttons as desired
+		disableButtonsBasedOnPageCount(searchForm, customerService, cus, request, pageCount, page);
+		
+		return mapping.findForward(forward);
+	}
+	
+	/**
+     * Set flags for button disabling based on the pageCount.
+     * 
+     * @param request   HttpServletRequest object for setting attributes
+     * @param pageCount Page count total
+     */
+    private void disableButtonsBasedOnPageCount(SearchForm searchForm, SearchService customerService, List<MSTCUSTOMER> cus, HttpServletRequest request, int pageCount , int page) {
+    	int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);
+        if (pageCount == 0) {
+            request.setAttribute("disableFirst", true);
+            request.setAttribute("disablePrevious", true);
+            request.setAttribute("disableNext", true);
+            request.setAttribute("disableLast", true);
+            request.setAttribute("disableDelete", true);
+        } else if (pageCount > 0 && countCustomer <= Constants.TOTAL_ITEM) {
+            request.setAttribute("disableFirst", true);
+            request.setAttribute("disablePrevious", true);
+            request.setAttribute("disableNext", true);
+            request.setAttribute("disableLast", true);
+        } else if (page == Constants.PAGE_ONE) {
+            request.setAttribute("disableFirst", true);
+            request.setAttribute("disablePrevious", true);
+        } else if (page == pageCount) {
+            request.setAttribute("disableNext", true);
+            request.setAttribute("disableLast", true);
+        }
     }
-</script>
+	
+	/**
+	 * Calculate total number of pages
+	 * 
+	 * @param customerService 	Call the get count page function
+	 * @return pageCount 		Page count total
+	 */
+	private int totalPage(SearchService customerService, SearchForm searchForm) {
+		int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);
+		int pageCount = (int)Math.ceil(countCustomer / Constants.TOTAL_ITEM);
+		if (countCustomer % Constants.TOTAL_ITEM != 0) {
+			pageCount++;
+		}
+		return pageCount;
+	}
+
+	/**
+	 * Process searches based on user criteria
+	 * 
+	 * @param searchForm    Form value of search screen
+	 * @param searchResult  A input list to search
+	 * @param request       HttpServletRequest object for setting attributes
+	 * @return              Returns a search list, or null if there are validation errors
+	 */
+	private List<MSTCUSTOMER> handleSearch(SearchForm searchForm, SearchService searchResult, HttpServletRequest request) {
+	    // If there are no errors, perform a search and return results
+	    List<MSTCUSTOMER> resultSearch = searchResult.getCustomerSearchResults(searchForm);
+	    return resultSearch;
+	}
+	
+	/**
+	 * Pagination action
+	 * 
+	 * @param currentPage  Current page location
+	 * @param searchForm   Search form data
+	 * @param endPage	   Last page  
+	 * @return 			   Returns the current page position
+	 */
+	 private int getAction(int currentPage,  SearchForm searchForm, int endPage) {
+		 String mode = searchForm.getsMode();
+	    	if (Constants.MODE_FIRST.equals(mode)) {
+	    		return 1;
+	    	} else if (Constants.MODE_PREVIOUS.equals(mode)) {
+	            return Math.max(currentPage - 1, 1);
+	        } else if (Constants.MODE_NEXT.equals(mode)) {
+	            return Math.min(currentPage + 1, endPage);
+	        } else if (Constants.MODE_LAST.equals(mode)) {
+	            return endPage;
+	        }
+		    return currentPage;
+	 }
+	
+}
 
 
 
@@ -14,6 +198,393 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
+* @(#)EditAction.java 01-00 2023/11/14
+* 
+* Version 1.00
+* Last_Update 2023/11/14
+*/
+package fjs.cs.action;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.springframework.web.struts.ActionSupport;
+
+import fjs.cs.common.Constants;
+import fjs.cs.form.EditForm;
+import fjs.cs.model.MSTCUSTOMER;
+import fjs.cs.model.MSTUSER;
+import fjs.cs.service.EditService;
+/**
+ * EditAction
+ * 
+ * This function handles additions and corrections
+ * 
+ * @version 1.00
+ * @since 1.00
+ * @author toi-tv
+ */
+public class EditAction extends ActionSupport {
+	/**
+	 * Handles add and edit functions
+	 *
+	 * @param mapping   An ActionMapping object that contains information about the mapping of the Action.
+	 * @param form      An ActionForm object contains data that requires editing
+	 * @param request   An HttpServletRequest object that contains information about the HTTP request.
+	 * @param response  An HttpServletResponse object that contains information about the HTTP response.
+	 * @return          An ActionForward object indicating the forward path for the request.
+	 * @throws Exception    If any exception occurs during the execution of the method.
+	 */
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		EditForm editForm = (EditForm) form;
+		HttpSession session = request.getSession(true);
+		
+		String editMode = editForm.getsMode();
+		String customerId = editForm.getCustomerId();
+		
+		EditService editService = (EditService) getWebApplicationContext().getBean(Constants.BEAN_EDIT);
+		
+		MSTCUSTOMER customer = new MSTCUSTOMER();
+		BeanUtils.copyProperties(customer, editForm);
+		
+		//Display userName
+		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+		if (userLoginSuccess != null) {
+			request.setAttribute("userLoginSuccess", userLoginSuccess.getUserName());	
+		}
+		
+		/**
+		 * If mode is save with empty customerId then save
+		 * Additionally, if mode is save and customerId exists, perform edit
+		 */
+		if (Constants.MODE_SAVE.equals(editMode) && customerId == "") {
+			setValueFormEdit(editForm, customer, userLoginSuccess);
+			int loggedInPsnCd = userLoginSuccess.getPsnCd();
+			customer.setInsertPSNCD(loggedInPsnCd);
+			
+			//Handle customer inserts
+			editService.insertCustomer(customer);
+			forward = Constants.FORWARD_SUCCESS;
+		} else if (Constants.MODE_SAVE.equals(editMode) && customerId != null) {
+			setValueFormEdit(editForm, customer, userLoginSuccess);
+			
+			//Handle customer update
+			editService.updateCustomers(customer);
+			forward = Constants.FORWARD_SUCCESS;
+		}
+		
+		//Save the display value of the edit interface
+		if (customerId != null && !Constants.MODE_SAVE.equals(editMode)) {
+			customer = editService.getCustomerInByCustomer(customer);
+			request.setAttribute("customerId", customer.getCustomerId());
+			request.setAttribute("customerName", customer.getCustomerName());
+			request.setAttribute("customerSex", customer.getSex());
+			request.setAttribute("customerBirthDay", customer.getBirthDay());
+			request.setAttribute("customerEmail", customer.getEmail());
+			request.setAttribute("customerAddress", customer.getAddress());
+		}
+		return mapping.findForward(forward);
+	}
+	
+	/**
+	 * Set up value forms for customers
+	 * 
+	 * @param editForm 	Edit form
+	 * @param customer	Customer entity
+	 */
+	private void setValueFormEdit(EditForm editForm, MSTCUSTOMER customer, MSTUSER userLoginSuccess) {
+		int loggedInPsnCd = userLoginSuccess.getPsnCd();
+		customer.setCustomerName(editForm.getCustomerName());
+		customer.setSex(editForm.getSex());
+		customer.setBirthDay(editForm.getBirthDay());
+		customer.setEmail(editForm.getEmail());
+		customer.setAddress(editForm.getAddress());
+		customer.setUpdatePSNCD(loggedInPsnCd);
+	}
+}
+
+
+
+
+
+
+
+
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
+* @(#)SearchForm.java 01-00 2023/11/13
+* 
+* Version 1.00
+* Last_Update 2023/11/13
+*/
+package fjs.cs.form;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+
+import fjs.cs.common.Constants;
+
+/**
+ * SearchForm
+ * 
+ * @version 1.00
+ * @since 1.00
+ * @author toi-tv
+ *
+ */
+
+public class SearchForm extends ActionForm {
+	private static final long serialVersionUID = 1L;
+	private String userName;
+	private String sex;
+	private String brithFrom;
+	private String brithTo;
+	private String[] selectedCustomers;
+	private String currentPage;
+	private int index = 0;
+	private String sMode;
+	
+	/*Getter and Setter*/
+	/**
+	 * Returns the location of the current page
+	 * 
+	 * @return User's current page
+	 */
+	public String getCurrentPage() {
+		return currentPage;
+	}
+	
+	/**
+	 * Set the user's current location
+	 * 
+	 * @param currentPage User's new site location
+	 */
+	public void setCurrentPage(String currentPage) {
+		this.currentPage = currentPage;
+	}
+	
+	/**
+	 * Get the index position value of the page
+	 * 
+	 * @return Index position of the page
+	 */
+	public int getIndex() {
+		return index;
+	}
+	
+	/**
+	 * Set the index position value
+	 * 
+	 * @param index The user's new index location
+	 */
+	public void setIndex(int index) {
+		this.index = index;
+	}
+	
+	/**
+	 * Get selected customers
+	 * 
+	 * @return Customer value array is selected
+	 */
+	public String[] getSelectedCustomers() {
+		return selectedCustomers;
+	}
+	
+	/**
+	 * Sets the value array value that the user selected
+	 * 
+	 * @param selectedCustomers Returns a new array of selected values
+	 */
+	public void setSelectedCustomers(String[] selectedCustomers) {
+		this.selectedCustomers = selectedCustomers;
+	}
+	
+	/**
+	 * Get the value of the user's name
+	 * 
+	 * @return Returns the userName to retrieve
+	 */
+	public String getUserName() {
+		return userName;
+	}
+
+	/**
+	 * Set the user's name value
+	 * 
+	 * @param userName Pass in the userName with the value to be set
+	 */
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+	
+	/**
+	 * Get the user's gender
+	 * 
+	 * @return Gender of the user to get
+	 */
+	public String getSex() {
+		return sex;
+	}
+	
+	/**
+	 * Set the user's gender value
+	 * 
+	 * @param sex Transmitting sex value needs to be established
+	 */
+	public void setSex(String sex) {
+		this.sex = sex;
+	}
+	
+	/**
+	 * Get the value birthday from
+	 * 
+	 * @return The birthday from value needs to be obtained
+	 */
+	public String getBrithFrom() {
+		return brithFrom;
+	}
+	
+	/**
+	 * Set the brithFrom value
+	 * 
+	 * @param brithFrom Pass in the new birthday form value
+	 */
+	public void setBrithFrom(String brithFrom) {
+		this.brithFrom = brithFrom;
+	}
+	
+	/**
+	 * Get the value birthday to
+	 * 
+	 * @return Birthday value to get
+	 */
+	public String getBrithTo() {
+		return brithTo;
+	}
+	
+	/**
+	 * Set the brithTo value
+	 * 
+	 * @param brithTo Pass in the new birthday to value
+	 */
+	public void setBrithTo(String brithTo) {
+		this.brithTo = brithTo;
+	}
+
+	/**
+	 * Get the mode value
+	 * 
+	 * @return Mode value just executed
+	 */
+	public String getsMode() {
+		return sMode;
+	}
+	
+	/**
+	 * Set the mode value
+	 * 
+	 * @param sMode Pass in the mode value to set
+	 */
+	public void setsMode(String sMode) {
+		this.sMode = sMode;
+	}
+	
+	@Override
+	public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+		ActionErrors errors = new ActionErrors();
+		
+	    if (brithTo != null && !brithTo.isEmpty() && !isValidDateFormat(brithTo)) {
+	        errors.add("brithTo", new ActionMessage("errors.userID"));
+	    }
+
+	    // Case 2: If birthdayFrom is not valid
+	    if (brithFrom != null && !brithFrom.isEmpty() && !isValidDateFormat(brithFrom)) {
+	        errors.add("brithFrom", new ActionMessage("errors.userID"));
+	    }
+
+	    // Case 3: If both birthdayFrom and birthdayTo are invalid or birthdayFrom is greater than birthdayTo
+	    if ((brithFrom != null && brithFrom != ""  && !brithFrom.isEmpty() && !isStartDateBeforeEndDate(brithFrom, brithTo)) ||
+	       (brithTo != null  && brithFrom != "" && !brithTo.isEmpty() && !isStartDateBeforeEndDate(brithFrom,brithTo))) {
+	        errors.add("", new ActionMessage("errors.userID"));
+	    }
+	    request.setAttribute("errors", errors);
+		return errors;
+	}
+	
+	/**
+	  * Function to check date format "YYYY/MM/DD"
+	  * 
+	  * @param date
+	  * @return true if true
+	  */
+   private boolean isValidDateFormat(String date) {
+       try {
+       	// Use SimpleDateFormat to check the format
+           SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+           sdf.setLenient(false);
+           sdf.parse(date);
+           return true;
+       } catch (ParseException e) {
+           // If there is a ParseException error, the format is incorrect
+           return false;
+       }
+   }
+   
+   /**
+    * The function checks whether the start date is less than the end date
+    * 
+    * @param startDate Start day
+    * @param endDate   End day
+    * @return  Returns true if true
+    */
+   private boolean isStartDateBeforeEndDate(String startDate, String endDate) {
+       try {
+           SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+           Date start = sdf.parse(startDate);
+           Date end = sdf.parse(endDate);
+           return start.before(end);
+       } catch (ParseException e) {
+           // If there is a ParseException error, it is considered invalid
+           return false;
+       }
+   }
+}
 
 
 
