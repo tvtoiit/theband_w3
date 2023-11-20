@@ -1,3 +1,68 @@
+public MSTUSER getLoggedInUser(MSTUSER user) {
+	    MSTUSER currentUser = null;
+	    try {
+	        String loginQuery = "SELECT COUNT(*) FROM " + Constants.TABLE_USER +" WHERE USERID = :userID AND PASSWORD = :password AND DELETE_YMD IS NULL";
+	        
+	        Query countQuery = getSession().createQuery(loginQuery)
+	            .setParameter("userID", user.getUserID())
+	            .setParameter("password", user.getPassword());
+	        
+	        int loginResult = ((Number) countQuery.uniqueResult()).intValue();
+	        /**
+	         * If the query is successful, get userID to display the search screen
+	         */
+	        if (loginResult == Constants.LOGIN_SUCCESS) {
+	            String getUserQuery = "FROM " + Constants.TABLE_USER +" WHERE USERID = :userID AND DELETE_YMD IS NULL";
+	            Query query = getSession().createQuery(getUserQuery).setParameter("userID", user.getUserID());
+	            currentUser = (MSTUSER) query.uniqueResult();
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return currentUser;
+	}
+
+
+Rồi ở action tôi lại check như này 
+
+if (Constants.MODE_LOGIN.equals(modeLogin) || loginForm.getUserID() != null && loginForm.getPassword() != null) {
+			LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+			MSTUSER user = new MSTUSER();
+			BeanUtils.copyProperties(user, loginForm);
+			MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+			
+			//	If loggedInUser is present, switch to the Search screen
+			if (loggedInUser != null) {
+				session.setAttribute("user", loggedInUser);
+				forward = Constants.FORWARD_SUCCESS;
+			} else {
+				
+				/**
+				 * In case MODE_LOGIN is equal to Login, save the incorrectly
+				 * entered userID and password values. Word saves the value to display the login screen.
+				 */
+				if (Constants.MODE_LOGIN.equals(modeLogin)) {
+					request.setAttribute("userId", loginForm.getUserID());
+					request.setAttribute("passWord", loginForm.getPassword());
+				}
+				ActionErrors errors = new ActionErrors();
+				errors.add("", new ActionMessage("errors.notExist"));
+				
+				}
+			
+		}
+
+làm như nào mới tối ưu
+
+
+
+
+
+
+
+
+
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
