@@ -1,3 +1,35 @@
+---------Check T001
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.springframework.web.struts.ActionSupport;
+
+import fjs.cs.dao.impl.T001DaoImpl;
+import fjs.cs.dto.mstuser;
+
+public class T001 extends ActionSupport {
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		mstuser myForm = (mstuser) form;
+		String user = myForm.getUserId();
+		String pass = myForm.getPassWord();
+
+		if (!isValidLogin(request,user, pass)) {
+			ActionErrors errors = new ActionErrors();
+			errors.add("login", new ActionMessage("message.error.user.not.exit"));
+			request.setAttribute("formLogin", myForm);
+			saveErrors(request, errors);
+			return mapping.findForward("fail");
+		}
+		return mapping.findForward("success");
+	}
+
+
+
+
 --------------CheckTH from < to
 <logic:notEmpty name="errors">
     <script type="text/javascript">
