@@ -1,3 +1,39 @@
+--------------CheckTH from < to
+<logic:notEmpty name="errors">
+    <script type="text/javascript">
+        alert('<bean:write name="errors"/>');
+    </script>
+</logic:notEmpty>
+
+
+public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+	    ActionErrors errors = new ActionErrors();
+	    if (txtBirthdayToName != null && !txtBirthdayToName.isEmpty() && !isValidDateFormat(txtBirthdayToName)) {
+	        errors.add("txtBirthdayToName", new ActionMessage(Constants.MESSAGE_CHECKOFF));
+	    }
+
+	    // Case 2: If birthdayFrom is not valid
+	    if (txtBirthdayFromName != null && !txtBirthdayFromName.isEmpty() && !isValidDateFormat(txtBirthdayFromName)) {
+	        errors.add("txtBirthdayFromName", new ActionMessage(Constants.MESSAGE_CHECKOFF));
+	    }
+	    
+	    if (txtBirthdayFromName != null && txtBirthdayToName != null &&
+	    	    txtBirthdayFromName.compareTo(txtBirthdayToName) > 0) {
+	    	    errors.add("", new ActionMessage(Constants.MESSAGE_CHECKOFF));
+	    	}
+	    if (errors != null && !errors.isEmpty()) {
+	    	request.setAttribute("errors", errors);
+	    }
+	    return errors;
+	}
+
+
+
+
+
+
+
+
 ----------------**OK******
 public List<mstcustomer> getDataSearch(String name, String sex, String birthdayFrom, String birthdayTo) {
 	    StringBuilder query = new StringBuilder("SELECT CUSTOMER_ID, CUSTOMER_NAME, CASE WHEN SEX = 0 THEN 'Male' else 'Female' end as SEX, BIRTHDAY, ADDRESS ")
