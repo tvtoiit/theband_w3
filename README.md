@@ -1,3 +1,31 @@
+-------------Form
+
+<html:form action="./T001.do" method="POST">
+    <div class="content-login__header">
+        <h3>LOGIN</h3>
+        <div id="lblErrorMessage">
+            <html:errors/>
+        </div>
+    </div>
+    <div class="content-login__container">
+        <div class="form-group">
+            <label for="fullname" class="form-label form-label__userID">User Id: </label>
+            <html:text property="userId" styleId="txtUserID" maxlength="8" styleClass="form-control"/>
+        </div>
+        <div class="form-group__password">
+            <label for="password" class="form-label">Password: </label>
+            <html:text property="passWord" styleId="txtPassword" maxlength="8" styleClass="form-control"/>
+        </div>
+        <div class="form-group__btn">
+            <html:submit styleId="btnLogin" styleClass="form-submit" value="Login"/>
+            <html:reset styleId="btnClear" styleClass="form-submit" value="Clear"/>
+        </div>
+    </div>
+</html:form>
+
+
+
+
 ---------Check T001
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
