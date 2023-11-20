@@ -1,25 +1,5 @@
-private void disableButtonsBasedOnPageCount(SearchForm searchForm, SearchService customerService, List<MSTCUSTOMER> cus, HttpServletRequest request, int pageCount , int page) {
-    	int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);
-        if (pageCount == 0) {
-            request.setAttribute("disableFirst", true);
-            request.setAttribute("disablePrevious", true);
-            request.setAttribute("disableNext", true);
-            request.setAttribute("disableLast", true);
-            request.setAttribute("disableDelete", true);
-        } else if (pageCount > 0 && countCustomer <= Constants.TOTAL_ITEM) {
-            request.setAttribute("disableFirst", true);
-            request.setAttribute("disablePrevious", true);
-            request.setAttribute("disableNext", true);
-            request.setAttribute("disableLast", true);
-        } else if (page == Constants.PAGE_ONE) {
-            request.setAttribute("disableFirst", true);
-            request.setAttribute("disablePrevious", true);
-        } else if (page == pageCount) {
-            request.setAttribute("disableNext", true);
-            request.setAttribute("disableLast", true);
-        }
-    }
-
+"Trường hợp chưa đăng nhập từ màn hình Login, sử dụng url của màn hình Search thì vẫn có thể hiển thị màn hình.
+Nếu đúng thì khi chưa đăng nhập từ màn hình Login, tiến hành dùng url của màn hình Search thì vẫn phải quay về màn hình Login."				
 
 
 
