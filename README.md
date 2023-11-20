@@ -1,58 +1,30 @@
-public MSTUSER getLoggedInUser(MSTUSER user) {
-	    MSTUSER currentUser = null;
-	    try {
-	        String loginQuery = "SELECT COUNT(*) FROM " + Constants.TABLE_USER +" WHERE USERID = :userID AND PASSWORD = :password AND DELETE_YMD IS NULL";
-	        
-	        Query countQuery = getSession().createQuery(loginQuery)
-	            .setParameter("userID", user.getUserID())
-	            .setParameter("password", user.getPassword());
-	        
-	        int loginResult = ((Number) countQuery.uniqueResult()).intValue();
-	        /**
-	         * If the query is successful, get userID to display the search screen
-	         */
-	        if (loginResult == Constants.LOGIN_SUCCESS) {
-	            String getUserQuery = "FROM " + Constants.TABLE_USER +" WHERE USERID = :userID AND DELETE_YMD IS NULL";
-	            Query query = getSession().createQuery(getUserQuery).setParameter("userID", user.getUserID());
-	            currentUser = (MSTUSER) query.uniqueResult();
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
-	    return currentUser;
-	}
+private void disableButtonsBasedOnPageCount(SearchForm searchForm, SearchService customerService, List<MSTCUSTOMER> cus, HttpServletRequest request, int pageCount , int page) {
+    	int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);
+        if (pageCount == 0) {
+            request.setAttribute("disableFirst", true);
+            request.setAttribute("disablePrevious", true);
+            request.setAttribute("disableNext", true);
+            request.setAttribute("disableLast", true);
+            request.setAttribute("disableDelete", true);
+        } else if (pageCount > 0 && countCustomer <= Constants.TOTAL_ITEM) {
+            request.setAttribute("disableFirst", true);
+            request.setAttribute("disablePrevious", true);
+            request.setAttribute("disableNext", true);
+            request.setAttribute("disableLast", true);
+        } else if (page == Constants.PAGE_ONE) {
+            request.setAttribute("disableFirst", true);
+            request.setAttribute("disablePrevious", true);
+        } else if (page == pageCount) {
+            request.setAttribute("disableNext", true);
+            request.setAttribute("disableLast", true);
+        }
+    }
 
 
-Rồi ở action tôi lại check như này 
 
-if (Constants.MODE_LOGIN.equals(modeLogin) || loginForm.getUserID() != null && loginForm.getPassword() != null) {
-			LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
-			MSTUSER user = new MSTUSER();
-			BeanUtils.copyProperties(user, loginForm);
-			MSTUSER loggedInUser = loginService.getLoggedInUser(user);
-			
-			//	If loggedInUser is present, switch to the Search screen
-			if (loggedInUser != null) {
-				session.setAttribute("user", loggedInUser);
-				forward = Constants.FORWARD_SUCCESS;
-			} else {
-				
-				/**
-				 * In case MODE_LOGIN is equal to Login, save the incorrectly
-				 * entered userID and password values. Word saves the value to display the login screen.
-				 */
-				if (Constants.MODE_LOGIN.equals(modeLogin)) {
-					request.setAttribute("userId", loginForm.getUserID());
-					request.setAttribute("passWord", loginForm.getPassword());
-				}
-				ActionErrors errors = new ActionErrors();
-				errors.add("", new ActionMessage("errors.notExist"));
-				
-				}
-			
-		}
 
-làm như nào mới tối ưu
+
+    
 
 
 
