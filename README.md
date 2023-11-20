@@ -1,3 +1,48 @@
+@Override
+	public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+		ActionErrors errors = new ActionErrors();
+		
+	    if (brithTo != null && !brithTo.isEmpty() && !isValidDateFormat(brithTo)) {
+	        errors.add("brithTo", new ActionMessage("errors.userID"));
+	    }
+
+	    // Case 2: If birthdayFrom is not valid
+	    if (brithFrom != null && !brithFrom.isEmpty() && !isValidDateFormat(brithFrom)) {
+	        errors.add("brithFrom", new ActionMessage("errors.userID"));
+	    }
+
+	    // Case 3: If both birthdayFrom and birthdayTo are invalid or birthdayFrom is greater than birthdayTo
+	    if ((brithFrom != null && brithFrom != ""  && !brithFrom.isEmpty() && !isStartDateBeforeEndDate(brithFrom, brithTo)) ||
+	       (brithTo != null  && brithFrom != "" && !brithTo.isEmpty() && !isStartDateBeforeEndDate(brithFrom,brithTo))) {
+	        errors.add("", new ActionMessage("errors.userID"));
+	    }
+	    request.setAttribute("errors", errors);
+		return errors;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 "Trường hợp chưa đăng nhập từ màn hình Login, sử dụng url của màn hình Search thì vẫn có thể hiển thị màn hình.
 Nếu đúng thì khi chưa đăng nhập từ màn hình Login, tiến hành dùng url của màn hình Search thì vẫn phải quay về màn hình Login."				
 
