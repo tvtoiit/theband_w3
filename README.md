@@ -1,3 +1,41 @@
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+
+public class FileUploadAction extends Action {
+
+    @Override
+    public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        FileUploadForm fileUploadForm = (FileUploadForm) form;
+        MultipartFile multipartFile = fileUploadForm.getFile();
+
+        // Process and save the uploaded file
+        String fileName = multipartFile.getFileName();
+        String contentType = multipartFile.getContentType();
+        long fileSize = multipartFile.getSize();
+        InputStream inputStream = multipartFile.getInputStream();
+
+        // Read the file into a list of lines
+        InputStream inputStream = new FileInputStream(fileName);
+        String[] lines = inputStream.readAllLines();
+
+        // Do something with the lines
+        for (String line : lines) {
+            // Do something with the line
+        }
+
+        // Respond with a success message
+        request.setAttribute("message", "File uploaded successfully.");
+        return mapping.findForward("success");
+    }
+}
+
+
+
+
+
+
 
 ---------validate
 @Override
