@@ -9,10 +9,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form Validation</title>
     <script>
+        // Lưu trữ giá trị ban đầu của hai ô input
+        var initialBirthFromValue = "";
+        var initialBirthToValue = "";
+
+        window.onload = function() {
+            // Lấy giá trị ban đầu của hai ô input khi trang được tải
+            initialBirthFromValue = document.getElementById('birthFrom').value;
+            initialBirthToValue = document.getElementById('birthTo').value;
+        };
+
         function validateForm() {
             // Lấy giá trị từ các ô input
-            var birthFrom = document.getElementById('birthFrom').value;
-            var birthTo = document.getElementById('birthTo').value;
+            var birthFromInput = document.getElementById('birthFrom');
+            var birthToInput = document.getElementById('birthTo');
+            var birthFrom = birthFromInput.value;
+            var birthTo = birthToInput.value;
 
             // Kiểm tra nếu cả hai input đều có giá trị
             if (birthFrom && birthTo) {
@@ -24,6 +36,11 @@
                 if (dateTo < dateFrom) {
                     // Hiển thị thông báo nếu birthTo bé hơn birthFrom
                     alert("birthTo phải lớn hơn hoặc bằng birthFrom");
+
+                    // Gán lại giá trị của hai ô input thành giá trị ban đầu
+                    birthFromInput.value = initialBirthFromValue;
+                    birthToInput.value = initialBirthToValue;
+
                     return false; // Ngăn chặn form từ việc submit nếu có lỗi
                 }
             }
@@ -47,6 +64,7 @@
 
 </body>
 </html>
+
 
 
 -------------------------------
