@@ -1,3 +1,383 @@
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
+* @(#)EditAction.java 01-00 2023/11/14
+* 
+* Version 1.00
+* Last_Update 2023/11/14
+*/
+package fjs.cs.action;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.springframework.web.struts.ActionSupport;
+
+import fjs.cs.common.Constants;
+import fjs.cs.form.EditForm;
+import fjs.cs.model.MSTCUSTOMER;
+import fjs.cs.model.MSTUSER;
+import fjs.cs.service.EditService;
+/**
+ * EditAction
+ * 
+ * This function handles additions and corrections
+ * 
+ * @version 1.00
+ * @since 1.00
+ * @author toi-tv
+ */
+public class EditAction extends ActionSupport {
+	/**
+	 * Handles add and edit functions
+	 *
+	 * @param mapping   An ActionMapping object that contains information about the mapping of the Action.
+	 * @param form      An ActionForm object contains data that requires editing
+	 * @param request   An HttpServletRequest object that contains information about the HTTP request.
+	 * @param response  An HttpServletResponse object that contains information about the HTTP response.
+	 * @return          An ActionForward object indicating the forward path for the request.
+	 * @throws Exception    If any exception occurs during the execution of the method.
+	 */
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		EditForm editForm = (EditForm) form;
+		HttpSession session = request.getSession(true);
+		
+		String editMode = editForm.getsMode();
+		String customerId = editForm.getCustomerId();
+		
+		EditService editService = (EditService) getWebApplicationContext().getBean(Constants.BEAN_EDIT);
+		
+		MSTCUSTOMER customer = new MSTCUSTOMER();
+		BeanUtils.copyProperties(customer, editForm);
+		
+		//Display username in edit screen
+		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+		if (userLoginSuccess != null) {
+			editForm.setUserLoginSuccess(userLoginSuccess.getUserName());	
+		} else {
+			forward = Constants.FORWARD_LOGOUT;
+		}
+		
+		/**
+		 * If mode is save with empty customerId then save
+		 * Additionally, if mode is save and customerId exists, perform edit
+		 */
+		if (Constants.MODE_SAVE.equals(editMode) && customerId == "") {
+			setValueFormEdit(editForm, customer, userLoginSuccess);
+			int loggedInPsnCd = userLoginSuccess.getPsnCd();
+			customer.setInsertPSNCD(loggedInPsnCd);
+			
+			//Handle customer inserts
+			editService.insertCustomer(customer);
+			forward = Constants.FORWARD_SUCCESS;
+		} else if (Constants.MODE_SAVE.equals(editMode) && customerId != null) {
+			setValueFormEdit(editForm, customer, userLoginSuccess);
+			
+			//Handle customer update
+			editService.updateCustomers(customer);
+			forward = Constants.FORWARD_SUCCESS;
+		}
+		
+		//Save the display value of the edit interface
+		if (customerId != null && !Constants.MODE_SAVE.equals(editMode)) {
+			customer = editService.getCustomerInByCustomer(customer);
+			editForm.setCustomerId(String.valueOf(customer.getCustomerId()));
+			editForm.setCustomerName(customer.getCustomerName());
+			editForm.setSex(customer.getSex());
+			editForm.setBirthDay(customer.getBirthDay());
+			editForm.setEmail(customer.getEmail());
+			editForm.setAddress(customer.getAddress());
+			request.setAttribute("editForm", editForm);
+		}
+		return mapping.findForward(forward);
+	}
+	
+	/**
+	 * Set up value forms for customers
+	 * 
+	 * @param editForm 	Edit form
+	 * @param customer	Customer entity
+	 */
+	private void setValueFormEdit(EditForm editForm, MSTCUSTOMER customer, MSTUSER userLoginSuccess) {
+		int loggedInPsnCd = userLoginSuccess.getPsnCd();
+		customer.setCustomerName(editForm.getCustomerName());
+		customer.setSex(editForm.getSex());
+		customer.setBirthDay(editForm.getBirthDay());
+		customer.setEmail(editForm.getEmail());
+		customer.setAddress(editForm.getAddress());
+		customer.setUpdatePSNCD(loggedInPsnCd);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
+* @(#)SearchAction.java 01-00 2023/11/13
+* 
+* Version 1.00
+* Last_Update 2023/11/13
+*/
+package fjs.cs.action;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.springframework.web.struts.ActionSupport;
+
+import fjs.cs.common.Constants;
+import fjs.cs.form.SearchForm;
+import fjs.cs.model.MSTCUSTOMER;
+import fjs.cs.model.MSTUSER;
+import fjs.cs.service.SearchService;
+/**
+ * SearchAction
+ * 
+ * This class performs searching and paging
+ * 
+ * @version 1.00
+ * @since 1.00
+ * @author toi-tv
+ */
+public class SearchAction extends ActionSupport {
+	
+	/**
+	 * Perform search and pagination
+	 *
+	 * @param mapping   An ActionMapping object that contains information about the mapping of the Action.
+	 * @param form      An ActionForm object that holds the search request data.
+	 * @param request   An HttpServletRequest object that contains information about the HTTP request.
+	 * @param response  An HttpServletResponse object that contains information about the HTTP response.
+	 * @return          An ActionForward object indicating the forward path for the request.
+	 * @throws Exception    If any exception occurs during the execution of the method.
+	 */
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		SearchForm searchForm = (SearchForm) form;
+		String modeSearch = searchForm.getsMode();
+		HttpSession session = request.getSession(true);
+		
+		//Assign initial value
+		List<MSTCUSTOMER> cus = null;
+		String currentPageStr = null;
+		int currentPage;
+		int page = 0;
+		 
+		SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
+		
+		if(!Constants.MODE_SEARCH.equals(modeSearch)) {
+			currentPageStr = searchForm.getCurrentPage();
+		} 
+		
+		//Display username in search screen
+		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+		if (userLoginSuccess != null) {
+			searchForm.setUserLoginSuccess(userLoginSuccess.getUserName());
+		} else {
+			forward = Constants.FORWARD_SUCCESS;
+		}
+		
+		//If there is a current page, take out page one
+		if (currentPageStr != null && !currentPageStr.isEmpty()) {
+			currentPage = Integer.parseInt(currentPageStr);
+		} else {
+			currentPage = Constants.PAGE_ONE;
+		}
+		
+		//Get the total number of search results items
+		int pageCount = totalPage(customerService, searchForm);
+			
+		page = getAction(currentPage, searchForm, pageCount);
+		
+		//Calculate the index position value to display the page number
+		int indexPage = (page-1)*Constants.TOTAL_ITEM;
+		searchForm.setIndex(indexPage);
+		
+		cus = handleSearch(searchForm, customerService, request);
+		searchForm.setCurrentPage(String.valueOf(page));
+		searchForm.setPageData(cus);
+		request.setAttribute("searchForm", searchForm);
+
+		//Display buttons as desired
+		disableButtonsBasedOnPageCount(searchForm, customerService, cus, request, pageCount, page);
+		return mapping.findForward(forward);
+	}
+	
+	/**
+     * Set flags for button disabling based on the pageCount.
+     * 
+     * @param request   HttpServletRequest object for setting attributes
+     * @param pageCount Page count total
+     */
+    private void disableButtonsBasedOnPageCount(SearchForm searchForm, SearchService customerService, List<MSTCUSTOMER> cus, HttpServletRequest request, int pageCount , int page) {
+    	int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);    	
+    	
+    	//In case the total number of pages is zero
+    	if (pageCount == 0) {
+    		searchForm.setIsdisableFirst(true);
+    		searchForm.setIsdisablePrevious(true);
+    		searchForm.setIsdisableNext(true);
+    		searchForm.setIsdisableLast(true);
+    		searchForm.setIsdisableDelete(true);
+    		
+    	//Also if the total number of pages is greater than zero and less than the total number of items
+        } else if (pageCount > 0 && countCustomer <= Constants.TOTAL_ITEM) {
+        	searchForm.setIsdisableFirst(true);
+    		searchForm.setIsdisablePrevious(true);
+    		searchForm.setIsdisableNext(true);
+    		searchForm.setIsdisableLast(true);
+    		
+    	//In addition, the total number of pages is equal to one
+        } else if (page == Constants.PAGE_ONE) {
+        	searchForm.setIsdisableFirst(true);
+    		searchForm.setIsdisablePrevious(true);
+    		
+    	//Also if the current page is equal to the max page number
+        } else if (page == pageCount) {
+        	searchForm.setIsdisableNext(true);
+    		searchForm.setIsdisableLast(true);
+        }
+    }
+	
+	/**
+	 * Calculate total number of pages
+	 * 
+	 * @param customerService 	Call the get count page function
+	 * @return pageCount 		Page count total
+	 */
+	private int totalPage(SearchService customerService, SearchForm searchForm) {
+		int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);
+		int pageCount = (int)Math.ceil(countCustomer / Constants.TOTAL_ITEM);
+		if (countCustomer % Constants.TOTAL_ITEM != 0) {
+			pageCount++;
+		}
+		return pageCount;
+	}
+
+	/**
+	 * Process searches based on user criteria
+	 * 
+	 * @param searchForm    Form value of search screen
+	 * @param searchResult  A input list to search
+	 * @param request       HttpServletRequest object for setting attributes
+	 * @return              Returns a search list, or null if there are validation errors
+	 */
+	private List<MSTCUSTOMER> handleSearch(SearchForm searchForm, SearchService searchResult, HttpServletRequest request) {
+	    List<MSTCUSTOMER> resultSearch = searchResult.getCustomerSearchResults(searchForm);
+	    return resultSearch;
+	}
+	
+	/**
+	 * Pagination action
+	 * 
+	 * @param currentPage  Current page location
+	 * @param searchForm   Search form data
+	 * @param endPage	   Last page  
+	 * @return 			   Returns the current page position
+	 */
+	private int getAction(int currentPage, SearchForm searchForm, int endPage) {
+		String mode = searchForm.getsMode();
+
+		// If MODE_FIRST is enabled, the current page is equal to one
+		if (Constants.MODE_FIRST.equals(mode)) {
+			return 1;
+
+			/**
+			 * If MODE_PREVIOUS mode is enabled, the current page is reduced by one and the
+			 * smallest is page one
+			 */
+		} else if (Constants.MODE_PREVIOUS.equals(mode)) {
+			return Math.max(currentPage - 1, 1);
+
+			/**
+			 * If MODE_NEXT mode is enabled, increase the current page by one and the
+			 * largest page is pageMax
+			 */
+		} else if (Constants.MODE_NEXT.equals(mode)) {
+			return Math.min(currentPage + 1, endPage);
+
+			/**
+			 * If MODE_LAST mode is enabled, it will be the last page
+			 */
+		} else if (Constants.MODE_LAST.equals(mode)) {
+			return endPage;
+		}
+		return currentPage;
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <button name="sMode" <logic:equal name="searchForm" property="isdisablePrevious" value="true">disabled</logic:equal> class="search-btn search-btn__padding search-btn__soundstart" value="previous">&lt;</button>
 
 
