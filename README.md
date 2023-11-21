@@ -9,43 +9,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form Validation</title>
     <script>
-        // Lưu trữ giá trị ban đầu của hai ô input
         var initialBirthFromValue = "";
         var initialBirthToValue = "";
 
         window.onload = function() {
-            // Lấy giá trị ban đầu của hai ô input khi trang được tải
             initialBirthFromValue = document.getElementById('birthFrom').value;
             initialBirthToValue = document.getElementById('birthTo').value;
         };
 
+        function isValidDate(dateString) {
+            // Kiểm tra định dạng YYYY/MM/DD bằng biểu thức chính quy
+            var regex = /^\d{4}\/\d{2}\/\d{2}$/;
+            return regex.test(dateString);
+        }
+
         function validateForm() {
-            // Lấy giá trị từ các ô input
             var birthFromInput = document.getElementById('birthFrom');
             var birthToInput = document.getElementById('birthTo');
             var birthFrom = birthFromInput.value;
             var birthTo = birthToInput.value;
 
-            // Kiểm tra nếu cả hai input đều có giá trị
+            // Kiểm tra định dạng của hai ngày
+            if (!isValidDate(birthFrom) || !isValidDate(birthTo)) {
+                alert("Ngày sinh không đúng định dạng (YYYY/MM/DD)");
+                return false;
+            }
+
             if (birthFrom && birthTo) {
-                // Chuyển đổi giá trị thành đối tượng Date để so sánh
                 var dateFrom = new Date(birthFrom);
                 var dateTo = new Date(birthTo);
 
-                // So sánh ngày
                 if (dateTo < dateFrom) {
-                    // Hiển thị thông báo nếu birthTo bé hơn birthFrom
                     alert("birthTo phải lớn hơn hoặc bằng birthFrom");
-
-                    // Gán lại giá trị của hai ô input thành giá trị ban đầu
                     birthFromInput.value = initialBirthFromValue;
                     birthToInput.value = initialBirthToValue;
-
-                    return false; // Ngăn chặn form từ việc submit nếu có lỗi
+                    return false;
                 }
             }
 
-            // Cho phép submit form nếu không có lỗi
             return true;
         }
     </script>
@@ -64,6 +65,7 @@
 
 </body>
 </html>
+
 
 
 
