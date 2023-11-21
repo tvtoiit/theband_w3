@@ -1,3 +1,9 @@
+重大: 'POSITION' is not a recognized built-in function name.
+org.hibernate.exception.SQLGrammarException: could not execute query
+
+
+
+
 public List<MSTCUSTOMER> getCustomerSearchResults(SearchForm searchForm) {
     try {
         StringBuilder hql = new StringBuilder("FROM " + Constants.TABLE_CUSTOMER + " WHERE DELETE_YMD IS NULL");
