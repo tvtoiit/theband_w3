@@ -1,3 +1,58 @@
+----------------validate
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Validation</title>
+    <script>
+        function validateForm() {
+            // Lấy giá trị từ các ô input
+            var birthFrom = document.getElementById('birthFrom').value;
+            var birthTo = document.getElementById('birthTo').value;
+
+            // Kiểm tra nếu cả hai input đều có giá trị
+            if (birthFrom && birthTo) {
+                // Chuyển đổi giá trị thành đối tượng Date để so sánh
+                var dateFrom = new Date(birthFrom);
+                var dateTo = new Date(birthTo);
+
+                // So sánh ngày
+                if (dateTo < dateFrom) {
+                    // Hiển thị thông báo nếu birthTo bé hơn birthFrom
+                    alert("birthTo phải lớn hơn hoặc bằng birthFrom");
+                    return false; // Ngăn chặn form từ việc submit nếu có lỗi
+                }
+            }
+
+            // Cho phép submit form nếu không có lỗi
+            return true;
+        }
+    </script>
+</head>
+<body>
+
+    <form onsubmit="return validateForm()">
+        <label for="birthFrom">Ngày sinh từ:</label>
+        <input type="text" id="birthFrom" name="birthFrom" placeholder="YYYY/MM/DD">
+
+        <label for="birthTo">Ngày sinh đến:</label>
+        <input type="text" id="birthTo" name="birthTo" placeholder="YYYY/MM/DD">
+
+        <input type="submit" value="Submit">
+    </form>
+
+</body>
+</html>
+
+
+-------------------------------
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
