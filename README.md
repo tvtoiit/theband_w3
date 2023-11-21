@@ -1,3 +1,8 @@
+<button name="sMode" <logic:equal name="searchForm" property="isdisablePrevious" value="true">disabled</logic:equal> class="search-btn search-btn__padding search-btn__soundstart" value="previous">&lt;</button>
+
+
+
+
 private void disableButtonsBasedOnPageCount(SearchForm searchForm, SearchService customerService, List<MSTCUSTOMER> cus, HttpServletRequest request, int pageCount , int page) {
     	int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);
     	
