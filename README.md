@@ -1,7 +1,3 @@
-could not locate named parameter [name]
-
-
-
 public List<MSTCUSTOMER> getCustomerSearchResults(SearchForm searchForm) {
     try {
         StringBuilder hql = new StringBuilder("FROM " + Constants.TABLE_CUSTOMER + " WHERE DELETE_YMD IS NULL");
@@ -32,8 +28,10 @@ public List<MSTCUSTOMER> getCustomerSearchResults(SearchForm searchForm) {
 
         Query query = getSession().createQuery(hql.toString());
 
-        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty() && !searchForm.getUserName().equals("%")) {
-            query.setParameter("name", "%" + searchForm.getUserName() + "%");
+        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty()) {
+            if (!searchForm.getUserName().equals("%")) {
+                query.setParameter("name", "%" + searchForm.getUserName() + "%");
+            }
         }
 
         if (searchForm.getSex() != null && !searchForm.getSex().isEmpty()) {
