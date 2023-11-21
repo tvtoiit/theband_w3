@@ -1,3 +1,59 @@
+private void disableButtonsBasedOnPageCount(SearchForm searchForm, SearchService customerService, List<MSTCUSTOMER> cus, HttpServletRequest request, int pageCount , int page) {
+    	int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);
+    	
+    	if (pageCount == 0) {
+    		searchForm.setIsdisableFirst(true);
+    		searchForm.setIsdisablePrevious(true);
+    		searchForm.setIsdisableNext(true);
+    		searchForm.setIsdisableLast(true);
+    		searchForm.setIsdisableDelete(true);
+        } else if (pageCount > 0 && countCustomer <= Constants.TOTAL_ITEM) {
+        	searchForm.setIsdisableFirst(true);
+    		searchForm.setIsdisablePrevious(true);
+    		searchForm.setIsdisableNext(true);
+    		searchForm.setIsdisableLast(true);
+        } else if (page == Constants.PAGE_ONE) {
+        	searchForm.setIsdisableFirst(true);
+    		searchForm.setIsdisablePrevious(true);
+        } else if (page == pageCount) {
+        	searchForm.setIsdisableNext(true);
+    		searchForm.setIsdisableLast(true);
+        }
+    }
+
+
+
+
+
+<div class="search-container__btnContext--start">
+	<button name="sMode" <logic:notEmpty name="disableFirst">disabled</logic:notEmpty> class="search-btn search-btn__startend " value="first">&lt;&lt;</button>
+	<button name="sMode" <logic:notEmpty name="disablePrevious">disabled</logic:notEmpty> class="search-btn search-btn__padding search-btn__soundstart" value="previous">&lt;</button>
+	<label for="html" class="search-container__btnContext--textstart">Previous</label>
+    </div>
+    <div class="search-container__btnContext--end">
+	<label for="html" class="search-container__btnContext--textend">Next</label>
+	<button type="submit" <logic:notEmpty name="disableNext">disabled</logic:notEmpty> class="search-btn search-btn__padding" name="sMode" value="next">&gt;</button>  
+	<button type="submit" <logic:notEmpty name="disableLast">disabled</logic:notEmpty> class="search-btn search-btn__startend search-btn__soundend" name="sMode" value="last">&gt;&gt;</button>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <html:form action="/Edit.do" method="POST" onsubmit="return validateForm()">
 		<div class="main-edit__cotainer">
 			<div class="edit-container__content">
