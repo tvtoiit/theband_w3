@@ -1,3 +1,93 @@
+public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+        HttpServletResponse response) throws Exception {
+    String forward = Constants.FORWARD_FAILURE;
+    EditForm editForm = (EditForm) form;
+    HttpSession session = request.getSession(true);
+
+    String editMode = editForm.getsMode();
+    String customerId = editForm.getCustomerId();
+
+    EditService editService = (EditService) getWebApplicationContext().getBean(Constants.BEAN_EDIT);
+
+    MSTCUSTOMER customer = new MSTCUSTOMER();
+    BeanUtils.copyProperties(customer, editForm);
+
+    // Display userName
+    MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+    if (userLoginSuccess != null) {
+        request.setAttribute("userLoginSuccess", userLoginSuccess.getUserName());
+    }
+
+    // If mode is save with empty customerId then save
+    if (Constants.MODE_SAVE.equals(editMode) && "".equals(customerId)) {
+        setValueFormEdit(editForm, customer, userLoginSuccess);
+        int loggedInPsnCd = userLoginSuccess.getPsnCd();
+        customer.setInsertPSNCD(loggedInPsnCd);
+
+        // Handle customer inserts
+        editService.insertCustomer(customer);
+        forward = Constants.FORWARD_SUCCESS;
+    } else if (Constants.MODE_SAVE.equals(editMode) && customerId != null && !"".equals(customerId)) {
+        setValueFormEdit(editForm, customer, userLoginSuccess);
+
+        // Handle customer update
+        editService.updateCustomers(customer);
+        forward = Constants.FORWARD_SUCCESS;
+    }
+
+    // Save the display value of the edit interface
+    if (customerId != null && !Constants.MODE_SAVE.equals(editMode)) {
+        customer = editService.getCustomerInByCustomer(customer);
+        setCustomerAttributes(request, customer);
+    }
+    return mapping.findForward(forward);
+}
+
+/**
+ * Set up value forms for customers
+ *
+ * @param editForm Edit form
+ * @param customer Customer entity
+ * @param userLoginSuccess Logged-in user
+ */
+private void setValueFormEdit(EditForm editForm, MSTCUSTOMER customer, MSTUSER userLoginSuccess) {
+    int loggedInPsnCd = userLoginSuccess.getPsnCd();
+    customer.setCustomerName(editForm.getCustomerName());
+    customer.setSex(editForm.getSex());
+    customer.setBirthDay(editForm.getBirthDay());
+    customer.setEmail(editForm.getEmail());
+    customer.setAddress(editForm.getAddress());
+    customer.setUpdatePSNCD(loggedInPsnCd);
+}
+
+/**
+ * Set customer attributes in the request for display
+ *
+ * @param request HttpServletRequest
+ * @param customer Customer entity
+ */
+private void setCustomerAttributes(HttpServletRequest request, MSTCUSTOMER customer) {
+    request.setAttribute("customerId", customer.getCustomerId());
+    request.setAttribute("customerName", customer.getCustomerName());
+    request.setAttribute("customerSex", customer.getSex());
+    request.setAttribute("customerBirthDay", customer.getBirthDay());
+    request.setAttribute("customerEmail", customer.getEmail());
+    request.setAttribute("customerAddress", customer.getAddress());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
