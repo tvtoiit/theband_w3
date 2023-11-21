@@ -1,3 +1,7 @@
+could not locate named parameter [name]
+
+
+
 public List<MSTCUSTOMER> getCustomerSearchResults(SearchForm searchForm) {
     try {
         StringBuilder hql = new StringBuilder("FROM " + Constants.TABLE_CUSTOMER + " WHERE DELETE_YMD IS NULL");
