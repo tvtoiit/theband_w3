@@ -1,69 +1,72 @@
 
-public List<MSTCUSTOMER> getCustomerSearchResults(SearchForm searchForm) {
-    try {
-        StringBuilder hql = new StringBuilder("FROM " + Constants.TABLE_CUSTOMER + " WHERE DELETE_YMD IS NULL");
-
-        // If the user searches by any condition, that condition will be appended
-        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty()) {
-            if (searchForm.getUserName().equals("%")) {
-                // If the search value is '%', only records containing '%' will be displayed.
-                hql.append(" AND CUSTOMER_NAME LIKE '%\\%%'");
-            } else {
-                hql.append(" AND CUSTOMER_NAME LIKE :name");
-            }
-        }
-
-        if (searchForm.getSex() != null && !searchForm.getSex().isEmpty()) {
-            hql.append(" AND SEX = :sex");
-        }
-
-        if (searchForm.getBrithFrom() != null && !searchForm.getBrithFrom().isEmpty()) {
-            hql.append(" AND BIRTHDAY >= :birthdayFrom");
-        }
-
-        if (searchForm.getBrithTo() != null && !searchForm.getBrithTo().isEmpty()) {
-            hql.append(" AND BIRTHDAY <= :birthdayTo");
-        }
-
-        hql.append(" ORDER BY CUSTOMER_ID");
-
-        Query query = getSession().createQuery(hql.toString());
-
-        if (searchForm.getUserName() != null && !searchForm.getUserName().isEmpty() && !searchForm.getUserName().equals("%")) {
-            query.setParameter("name", "%" + searchForm.getUserName() + "%");
-        }
-
-        if (searchForm.getSex() != null && !searchForm.getSex().isEmpty()) {
-            query.setParameter("sex", searchForm.getSex());
-        }
-
-        if (searchForm.getBrithFrom() != null && !searchForm.getBrithFrom().isEmpty()) {
-            query.setParameter("birthdayFrom", searchForm.getBrithFrom());
-        }
-
-        if (searchForm.getBrithTo() != null && !searchForm.getBrithTo().isEmpty()) {
-            query.setParameter("birthdayTo", searchForm.getBrithTo());
-        }
-
-        // Paging conditions
-        query.setFirstResult(searchForm.getIndex());
-        query.setMaxResults(Constants.TOTAL_ITEM);
-
-        @SuppressWarnings("unchecked")
-        List<MSTCUSTOMER> customers = query.list();
-
-        /**
-         * If the sex value is 0, assign it to Male and 1, assign it to Female
-         */
-        for (MSTCUSTOMER customer : customers) {
-            customer.setSex("0".equals(customer.getSex()) ? "Male" : "Female");
-        }
-        return customers;
-    } catch (Exception e) {
-        e.printStackTrace();
-        return null;
-    }
-}
+public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		EditForm editForm = (EditForm) form;
+		HttpSession session = request.getSession(true);
+		
+		String editMode = editForm.getsMode();
+		String customerId = editForm.getCustomerId();
+		
+		EditService editService = (EditService) getWebApplicationContext().getBean(Constants.BEAN_EDIT);
+		
+		MSTCUSTOMER customer = new MSTCUSTOMER();
+		BeanUtils.copyProperties(customer, editForm);
+		
+		//Display userName
+		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+		if (userLoginSuccess != null) {
+			request.setAttribute("userLoginSuccess", userLoginSuccess.getUserName());	
+		}
+		
+		/**
+		 * If mode is save with empty customerId then save
+		 * Additionally, if mode is save and customerId exists, perform edit
+		 */
+		if (Constants.MODE_SAVE.equals(editMode) && customerId == "") {
+			setValueFormEdit(editForm, customer, userLoginSuccess);
+			int loggedInPsnCd = userLoginSuccess.getPsnCd();
+			customer.setInsertPSNCD(loggedInPsnCd);
+			
+			//Handle customer inserts
+			editService.insertCustomer(customer);
+			forward = Constants.FORWARD_SUCCESS;
+		} else if (Constants.MODE_SAVE.equals(editMode) && customerId != null) {
+			setValueFormEdit(editForm, customer, userLoginSuccess);
+			
+			//Handle customer update
+			editService.updateCustomers(customer);
+			forward = Constants.FORWARD_SUCCESS;
+		}
+		
+		//Save the display value of the edit interface
+		if (customerId != null && !Constants.MODE_SAVE.equals(editMode)) {
+			customer = editService.getCustomerInByCustomer(customer);
+			request.setAttribute("customerId", customer.getCustomerId());
+			request.setAttribute("customerName", customer.getCustomerName());
+			request.setAttribute("customerSex", customer.getSex());
+			request.setAttribute("customerBirthDay", customer.getBirthDay());
+			request.setAttribute("customerEmail", customer.getEmail());
+			request.setAttribute("customerAddress", customer.getAddress());
+		}
+		return mapping.findForward(forward);
+	}
+	
+	/**
+	 * Set up value forms for customers
+	 * 
+	 * @param editForm 	Edit form
+	 * @param customer	Customer entity
+	 */
+	private void setValueFormEdit(EditForm editForm, MSTCUSTOMER customer, MSTUSER userLoginSuccess) {
+		int loggedInPsnCd = userLoginSuccess.getPsnCd();
+		customer.setCustomerName(editForm.getCustomerName());
+		customer.setSex(editForm.getSex());
+		customer.setBirthDay(editForm.getBirthDay());
+		customer.setEmail(editForm.getEmail());
+		customer.setAddress(editForm.getAddress());
+		customer.setUpdatePSNCD(loggedInPsnCd);
+	}
 
 
 
