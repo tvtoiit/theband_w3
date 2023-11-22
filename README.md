@@ -1,3 +1,37 @@
+function isValidDate(dateString) {
+    var regex = /^\d{4}\/\d{2}\/\d{2}$/;
+
+    if (!regex.test(dateString)) {
+        return false; // Không đúng định dạng
+    }
+
+    var parts = dateString.split('/');
+    var year = parseInt(parts[0], 10);
+    var month = parseInt(parts[1], 10);
+    var day = parseInt(parts[2], 10);
+
+    // Kiểm tra năm và tháng
+    if (year < 1000 || year > 3000 || month < 1 || month > 12) {
+        return false;
+    }
+
+    // Kiểm tra ngày
+    var lastDayOfMonth = new Date(year, month, 0).getDate();
+    if (day < 1 || day > lastDayOfMonth) {
+        return false;
+    }
+
+    return true;
+}
+
+
+
+
+
+
+
+
+
 những xử lý mà liên quan đến searchForm thì phải đưa nó về SearchService
 
 
