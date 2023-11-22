@@ -1,3 +1,20 @@
+response.setHeader("Content-Disposition", "attachment; filename=\"exported_data.csv\"");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
     String forward = Constants.FORWARD_SUCCESS;
