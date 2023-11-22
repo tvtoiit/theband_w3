@@ -1,29 +1,55 @@
-function isValidDate(dateString) {
-    var regex = /^\d{4}\/\d{2}\/\d{2}$/;
+public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_SUCCESS;
+		SearchForm searchForm = (SearchForm) form;
+		String modeSearch = searchForm.getsMode();
+		HttpSession session = request.getSession(true);
+		
+		//Assign initial value
+		List<MSTCUSTOMER> cus = null;
+		String currentPageStr = null;
+		int currentPage;
+		int page = 0;
+		 
+		SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
+		
+		if(!Constants.MODE_SEARCH.equals(modeSearch)) {
+			currentPageStr = searchForm.getCurrentPage();
+		} 
+		
+		//Display username in search screen
+		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+		if (userLoginSuccess != null) {
+			searchForm.setUserLoginSuccess(userLoginSuccess.getUserName());
+		} else {
+			forward = Constants.FORWARD_FAILURE;
+		}
+		
+		//If there is a current page, take out page one
+		if (currentPageStr != null && !currentPageStr.isEmpty()) {
+			currentPage = Integer.parseInt(currentPageStr);
+		} else {
+			currentPage = Constants.PAGE_ONE;
+		}
+		
+		//Get the total number of search results items
+		int pageCount = customerService.totalPage(customerService, searchForm);
+			
+		page = customerService.getAction(currentPage, searchForm, pageCount);
+		
+		//Calculate the index position value to display the page number
+		int indexPage = (page-1)*Constants.TOTAL_ITEM;
+		searchForm.setIndex(indexPage);
+		
+		cus = customerService.handleSearch(searchForm, customerService, request);
+		searchForm.setCurrentPage(String.valueOf(page));
+		searchForm.setPageData(cus);
+		request.setAttribute("searchForm", searchForm);
 
-    if (!regex.test(dateString)) {
-        return false; // Không đúng định dạng
-    }
-
-    var parts = dateString.split('/');
-    var year = parseInt(parts[0], 10);
-    var month = parseInt(parts[1], 10);
-    var day = parseInt(parts[2], 10);
-
-    // Kiểm tra năm và tháng
-    if (year < 1000 || year > 3000 || month < 1 || month > 12) {
-        return false;
-    }
-
-    // Kiểm tra ngày
-    var lastDayOfMonth = new Date(year, month, 0).getDate();
-    if (day < 1 || day > lastDayOfMonth) {
-        return false;
-    }
-
-    return true;
-}
-
+		//Display buttons as desired
+		customerService.disableButtonsBasedOnPageCount(searchForm, customerService, cus, request, pageCount, page);
+		return mapping.findForward(forward);
+	}
 
 
 
