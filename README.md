@@ -1,5 +1,79 @@
 public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
+    String forward = Constants.FORWARD_SUCCESS;
+    SearchForm searchForm = (SearchForm) form;
+    HttpSession session = request.getSession(true);
+
+    List<MSTCUSTOMER> cus = null;
+    String currentPageStr = null;
+    int currentPage;
+    int page = 0;
+
+    SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
+
+    currentPageStr = getCurrentPage(searchForm);
+    forward = displayUsername(session, searchForm, forward);
+
+    currentPage = getCurrentPageNumber(currentPageStr);
+    int pageCount = customerService.totalPage(customerService, searchForm);
+    page = customerService.getAction(currentPage, searchForm, pageCount);
+
+    setIndexPage(searchForm, page);
+
+    cus = customerService.handleSearch(searchForm, customerService, request);
+    setSearchFormAttributes(request, searchForm, cus, page);
+
+    customerService.disableButtonsBasedOnPageCount(searchForm, customerService, cus, request, pageCount, page);
+
+    return mapping.findForward(forward);
+}
+
+private String getCurrentPage(SearchForm searchForm) {
+    return Constants.MODE_SEARCH.equals(searchForm.getsMode()) ? null : searchForm.getCurrentPage();
+}
+
+private String displayUsername(HttpSession session, SearchForm searchForm, String forward) {
+    MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+    if (userLoginSuccess != null) {
+        searchForm.setUserLoginSuccess(userLoginSuccess.getUserName());
+    } else {
+        forward = Constants.FORWARD_FAILURE;
+    }
+    return forward;
+}
+
+private int getCurrentPageNumber(String currentPageStr) {
+    return (currentPageStr != null && !currentPageStr.isEmpty()) ? Integer.parseInt(currentPageStr) : Constants.PAGE_ONE;
+}
+
+private void setIndexPage(SearchForm searchForm, int page) {
+    int indexPage = (page - 1) * Constants.TOTAL_ITEM;
+    searchForm.setIndex(indexPage);
+}
+
+private void setSearchFormAttributes(HttpServletRequest request, SearchForm searchForm, List<MSTCUSTOMER> cus, int page) {
+    searchForm.setCurrentPage(String.valueOf(page));
+    searchForm.setPageData(cus);
+    request.setAttribute("searchForm", searchForm);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
 		String forward = Constants.FORWARD_SUCCESS;
 		SearchForm searchForm = (SearchForm) form;
 		String modeSearch = searchForm.getsMode();
