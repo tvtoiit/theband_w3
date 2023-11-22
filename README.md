@@ -1,3 +1,23 @@
+// Lấy thời gian hiện tại dưới dạng số mili giây từ epoch
+long currentTimeMillis = System.currentTimeMillis();
+
+// Chuyển đổi thời gian thành định dạng "yyyyMMdd"
+SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+String formattedDate = dateFormat.format(new Date(currentTimeMillis));
+
+// Tạo tên tệp tin mới
+String fileName = "Customer_" + formattedDate + ".csv";
+
+// Đặt Header cho response để tạo tệp tin đính kèm
+response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+
+
+
+
+
+
+
+
 response.setHeader("Content-Disposition", "attachment; filename=\"exported_data.csv\"");
 Customer_yyyyMMdd.csv
 
