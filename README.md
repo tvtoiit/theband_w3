@@ -1,24 +1,192 @@
-document.addEventListener("DOMContentLoaded", function () {
-        var buttons = document.querySelectorAll('button[disabled]');
-        
-        buttons.forEach(function(button) {
-            button.classList.add('btn-disable');
-        });
-    });
+những xử lý mà liên quan đến searchForm thì phải đưa nó về SearchService
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-// Check YYYY/MM/DD format and validate if the date exists
-function isValidDate(dateString) {
-    var regex = /^\d{4}\/\d{2}\/\d{2}$/;
+File Action
 
-    if (!regex.test(dateString)) {
-        return false; // Không đúng định dạng
+public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_SUCCESS;
+		SearchForm searchForm = (SearchForm) form;
+		String modeSearch = searchForm.getsMode();
+		HttpSession session = request.getSession(true);
+		
+		//Assign initial value
+		List<MSTCUSTOMER> cus = null;
+		String currentPageStr = null;
+		int currentPage;
+		int page = 0;
+		 
+		SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
+		
+		if(!Constants.MODE_SEARCH.equals(modeSearch)) {
+			currentPageStr = searchForm.getCurrentPage();
+		} 
+		
+		//Display username in search screen
+		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+		if (userLoginSuccess != null) {
+			searchForm.setUserLoginSuccess(userLoginSuccess.getUserName());
+		} else {
+			forward = Constants.FORWARD_FAILURE;
+		}
+		
+		//If there is a current page, take out page one
+		if (currentPageStr != null && !currentPageStr.isEmpty()) {
+			currentPage = Integer.parseInt(currentPageStr);
+		} else {
+			currentPage = Constants.PAGE_ONE;
+		}
+		
+		//Get the total number of search results items
+		int pageCount = totalPage(customerService, searchForm);
+			
+		page = getAction(currentPage, searchForm, pageCount);
+		
+		//Calculate the index position value to display the page number
+		int indexPage = (page-1)*Constants.TOTAL_ITEM;
+		searchForm.setIndex(indexPage);
+		
+		cus = handleSearch(searchForm, customerService, request);
+		searchForm.setCurrentPage(String.valueOf(page));
+		searchForm.setPageData(cus);
+		request.setAttribute("searchForm", searchForm);
+
+		//Display buttons as desired
+		disableButtonsBasedOnPageCount(searchForm, customerService, cus, request, pageCount, page);
+		return mapping.findForward(forward);
+	}
+	
+	/**
+     * Set flags for button disabling based on the pageCount.
+     * 
+     * @param request   HttpServletRequest object for setting attributes
+     * @param pageCount Page count total
+     */
+    private void disableButtonsBasedOnPageCount(SearchForm searchForm, SearchService customerService, List<MSTCUSTOMER> cus, HttpServletRequest request, int pageCount , int page) {
+    	int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);    	
+    	
+    	//In case the total number of pages is zero
+    	if (pageCount == 0) {
+    		searchForm.setIsdisableFirst(true);
+    		searchForm.setIsdisablePrevious(true);
+    		searchForm.setIsdisableNext(true);
+    		searchForm.setIsdisableLast(true);
+    		searchForm.setIsdisableDelete(true);
+    		
+    	//Also if the total number of pages is greater than zero and less than the total number of items
+        } else if (pageCount > 0 && countCustomer <= Constants.TOTAL_ITEM) {
+        	searchForm.setIsdisableFirst(true);
+    		searchForm.setIsdisablePrevious(true);
+    		searchForm.setIsdisableNext(true);
+    		searchForm.setIsdisableLast(true);
+    		
+    	//In addition, the total number of pages is equal to one
+        } else if (page == Constants.PAGE_ONE) {
+        	searchForm.setIsdisableFirst(true);
+    		searchForm.setIsdisablePrevious(true);
+    		
+    	//Also if the current page is equal to the max page number
+        } else if (page == pageCount) {
+        	searchForm.setIsdisableNext(true);
+    		searchForm.setIsdisableLast(true);
+        }
     }
+	
+	/**
+	 * Calculate total number of pages
+	 * 
+	 * @param customerService 	Call the get count page function
+	 * @return pageCount 		Page count total
+	 */
+	private int totalPage(SearchService customerService, SearchForm searchForm) {
+		int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);
+		int pageCount = (int)Math.ceil(countCustomer / Constants.TOTAL_ITEM);
+		if (countCustomer % Constants.TOTAL_ITEM != 0) {
+			pageCount++;
+		}
+		return pageCount;
+	}
 
-    var parsedDate = moment(dateString, 'YYYY/MM/DD', true);
+	/**
+	 * Process searches based on user criteria
+	 * 
+	 * @param searchForm    Form value of search screen
+	 * @param searchResult  A input list to search
+	 * @param request       HttpServletRequest object for setting attributes
+	 * @return              Returns a search list, or null if there are validation errors
+	 */
+	private List<MSTCUSTOMER> handleSearch(SearchForm searchForm, SearchService searchResult, HttpServletRequest request) {
+	    List<MSTCUSTOMER> resultSearch = searchResult.getCustomerSearchResults(searchForm);
+	    return resultSearch;
+	}
+	
+	/**
+	 * Pagination action
+	 * 
+	 * @param currentPage  Current page location
+	 * @param searchForm   Search form data
+	 * @param endPage	   Last page  
+	 * @return 			   Returns the current page position
+	 */
+	private int getAction(int currentPage, SearchForm searchForm, int endPage) {
+		String mode = searchForm.getsMode();
 
-    return parsedDate.isValid();
+		// If MODE_FIRST is enabled, the current page is equal to one
+		if (Constants.MODE_FIRST.equals(mode)) {
+			return 1;
+
+			/**
+			 * If MODE_PREVIOUS mode is enabled, the current page is reduced by one and the
+			 * smallest is page one
+			 */
+		} else if (Constants.MODE_PREVIOUS.equals(mode)) {
+			return Math.max(currentPage - 1, 1);
+
+			/**
+			 * If MODE_NEXT mode is enabled, increase the current page by one and the
+			 * largest page is pageMax
+			 */
+		} else if (Constants.MODE_NEXT.equals(mode)) {
+			return Math.min(currentPage + 1, endPage);
+
+			/**
+			 * If MODE_LAST mode is enabled, it will be the last page
+			 */
+		} else if (Constants.MODE_LAST.equals(mode)) {
+			return endPage;
+		}
+		return currentPage;
+	}
+
+
+File Service
+
+public class SearchService {
+	private CustomerDao customerDao;
+
+	public void setCustomerDao(CustomerDao customerDao) {
+		this.customerDao = customerDao;
+	}
+	
+	/**
+	 * Get user search data based on form searches
+	 * 
+	 * @param  searchForm Search screen form value
+	 * @return a list of customers
+	 */
+	public List<MSTCUSTOMER> getCustomerSearchResults(SearchForm searchForm) {
+		return customerDao.getCustomerSearchResults(searchForm);
+	}
+	
+	/**
+	 * Get the number of customer search results
+	 * 
+	 * @param searchForm Search screen form value
+	 * @return Number of customer search records
+	 */
+	public long countCustomerSearchResults(SearchForm searchForm) {
+		return customerDao.countCustomerSearchResults(searchForm);
+	}
 }
 
 
