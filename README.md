@@ -1,3 +1,70 @@
+
+Nếu mà button bị disable thì add thêm class btn-disable
+
+<button name="sMode" <logic:equal name="searchForm" property="isdisableFirst" value="true">disabled</logic:equal> class="search-btn search-btn__startend " value="first">&lt;&lt;</button>
+	     		<button name="sMode" <logic:equal name="searchForm" property="isdisablePrevious" value="true">disabled</logic:equal> class="search-btn search-btn__padding search-btn__soundstart" value="previous">&lt;</button>
+
+
+
+
+<button type="submit" <logic:equal name="searchForm" property="isdisableNext" value="true">disabled</logic:equal> class="search-btn search-btn__padding" name="sMode" value="next">&gt;</button>  
+		        <button type="submit" <logic:equal name="searchForm" property="isdisableLast" value="true">disabled</logic:equal> class="search-btn search-btn__startend search-btn__soundend" name="sMode" value="last">&gt;&gt;</button>
+
+
+
+<button type="submit" name="deleteAction" value="delete" onclick="return validateDelete()" <logic:equal name="searchForm" property="isdisableDelete" value="true">disabled</logic:equal> id="delete-btn" class="search-btn">Delete </button>
+
+
+btn-disable {
+	border-right: none;
+	border-bottom: none;
+}
+
+
+
+
+
+Hiện tại tôi có 1 hàm như này, hiện tại chỉ kiểm tra được format của ngày không kiểm tra được ngày nhập vào là đúng
+VD: 2023/02/31 ngày này không tồn tại
+
+//Check YYYY/MM/DD format using regular expression
+function isValidDate(dateString) {
+    var regex = /^\d{4}\/\d{2}\/\d{2}$/;
+    return regex.test(dateString);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 check data ---------------
 
 package fjs.cs.action;
