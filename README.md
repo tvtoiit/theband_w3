@@ -3,7 +3,18 @@ response.setHeader("Content-Disposition", "attachment; filename=\"exported_data.
 
 
 
+// Lấy thời gian hiện tại dưới dạng số mili giây từ epoch
+long currentTimeMillis = System.currentTimeMillis();
 
+// Chuyển đổi thời gian thành định dạng "YYYY/MM/DD"
+SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+String formattedDate = dateFormat.format(new Date(currentTimeMillis));
+
+// Tạo tên tệp tin mới
+String fileName = "Customer/" + formattedDate + "/exported_data.csv";
+
+// Đặt Header cho response để tạo tệp tin đính kèm
+response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
 
 
 
