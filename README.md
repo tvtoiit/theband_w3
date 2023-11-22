@@ -1,3 +1,29 @@
+document.addEventListener("DOMContentLoaded", function () {
+        var buttons = document.querySelectorAll('button[disabled]');
+        
+        buttons.forEach(function(button) {
+            button.classList.add('btn-disable');
+        });
+    });
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+// Check YYYY/MM/DD format and validate if the date exists
+function isValidDate(dateString) {
+    var regex = /^\d{4}\/\d{2}\/\d{2}$/;
+
+    if (!regex.test(dateString)) {
+        return false; // Không đúng định dạng
+    }
+
+    var parsedDate = moment(dateString, 'YYYY/MM/DD', true);
+
+    return parsedDate.isValid();
+}
+
+
+
+
 
 Nếu mà button bị disable thì add thêm class btn-disable
 
@@ -16,8 +42,7 @@ Nếu mà button bị disable thì add thêm class btn-disable
 
 
 btn-disable {
-	border-right: none;
-	border-bottom: none;
+	opacity: 0.7;
 }
 
 
