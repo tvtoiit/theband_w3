@@ -1,375 +1,266 @@
-// Lấy thời gian hiện tại dưới dạng số mili giây từ epoch
-long currentTimeMillis = System.currentTimeMillis();
+package fjs.cs.action;
 
-// Chuyển đổi thời gian thành định dạng "yyyyMMdd"
-SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-String formattedDate = dateFormat.format(new Date(currentTimeMillis));
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
-// Tạo tên tệp tin mới
-String fileName = "Customer_" + formattedDate + ".csv";
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-// Đặt Header cho response để tạo tệp tin đính kèm
-response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+import org.apache.oro.text.regex.Pattern;
+import org.apache.struts.action.Action;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.upload.FormFile;
+import org.apache.tomcat.util.file.Matcher;
 
+import fjs.cs.dao.impl.T002DaoImp;
+import fjs.cs.dto.ImportForm;
+import fjs.cs.dto.mstcustomer;
 
-
-
-
-
-
-
-response.setHeader("Content-Disposition", "attachment; filename=\"exported_data.csv\"");
-Customer_yyyyMMdd.csv
-
-
-
-// Lấy thời gian hiện tại dưới dạng số mili giây từ epoch
-long currentTimeMillis = System.currentTimeMillis();
-
-// Chuyển đổi thời gian thành định dạng "YYYY/MM/DD"
-SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
-String formattedDate = dateFormat.format(new Date(currentTimeMillis));
-
-// Tạo tên tệp tin mới
-String fileName = "Customer/" + formattedDate + "/exported_data.csv";
-
-// Đặt Header cho response để tạo tệp tin đính kèm
-response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-
-
-
-
-
-
-
-
-
-
-
-public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+public class Import extends Action {
+	@SuppressWarnings("unlikely-arg-type")
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
-    String forward = Constants.FORWARD_SUCCESS;
-    SearchForm searchForm = (SearchForm) form;
-    HttpSession session = request.getSession(true);
+		mstcustomer t002Form = (mstcustomer) form;
+        String name = t002Form.getTxtCustomerName();
+        
+        String sex = t002Form.getSex();
+        String birthdayFrom = t002Form.getTxtBirthdayFromName();
+        
+        String birthdayTo = t002Form.getTxtBirthdayToName();
+        T002DaoImp impT002 = new T002DaoImp();
+        
+        List<mstcustomer> resultSearch = impT002.getDataSearch(name, sex, birthdayFrom, birthdayTo);
+        
+        
+        FormFile file = t002Form.getFile();
+        if (file != null) {
+        	// Đọc CUSTOMER_ID từ nội dung của file
+            String fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
+            String[] lines = fileContent.split("\n");
 
-    List<MSTCUSTOMER> cus = null;
-    String currentPageStr = null;
-    int currentPage;
-    int page = 0;
+            // Bắt đầu từ index 1 để bỏ qua dòng header
+            for (int i = 1; i < lines.length; i++) {
+                String line = lines[i];
+                String[] columns = line.split(",");
+                
+                // Kiểm tra số lượng cột để tránh truy cập ngoại lệ
+                if (columns.length >= 1) {
+                    String customerIdFromFile = columns[0].replace("\"", ""); // Loại bỏ dấu ngoặc kép
+                    boolean customerIdError = false;
+                    // Kiểm tra CUSTOMER_ID không empty và không tồn tại trong resultSearch
+                    if (customerIdFromFile != null && !customerIdFromFile.trim().isEmpty()) {
+                       
 
-    SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
+                        for (int index = 0; index < resultSearch.size(); index++) {
+                            mstcustomer customer = resultSearch.get(index);
+                            if (customer.getCustomerId().equals(customerIdFromFile)) {
+                                
+                                
+                                // Nếu tồn tại, in ra thông báo lỗi với thông tin dòng và CUSTOMER_ID
+                                System.out.println("Lỗi: Line " + (index + 2) + " - CUSTOMER_ID " + customerIdFromFile + " is not existed");
+                                
+                                break; // Nếu tồn tại, thoát vòng lặp
+                            }
+                        }
+                    }
+                    
+                    // Nếu CUSTOMER_ID không có lỗi, kiểm tra CUSTOMER_NAME
+                    if (!customerIdError) {
+                    	String customerNameFromFile = columns[1].replace("\"", "");
+                        if (customerNameFromFile != null && customerNameFromFile.length() > 50) {
+                            System.out.println("Lỗi: Line " + (i + 2) + " - CUSTOMER_NAME value is more than 50 kí tự");
+                        }
+                        
+                        if (!"Male".equals(sex) && !"Female".equals(sex)) {
+                            // In ra thông báo lỗi với thông tin dòng và giá trị "sex"
+                            System.out.println("Lỗi: Line " + (i + 2) + ", sex" + sex + " is not valid");
+                        }
+                        
+                        
+                     // Kiểm tra định dạng và tính hợp lệ của ngày "birthday"
+                        if (birthdayFrom != null && !birthdayFrom.trim().isEmpty()) {
+                            try {
+                                // Kiểm tra định dạng ngày
+                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+                                LocalDate parsedDate = LocalDate.parse(birthdayFrom, formatter);
 
-    currentPageStr = getCurrentPage(searchForm);
-    forward = displayUsername(session, searchForm, forward);
+                                // Kiểm tra tính hợp lệ của ngày
+                                if (!isValidDate(parsedDate)) {
+                                    System.out.println("Lỗi: Line " + (i + 2) + " - Birthday " + birthdayFrom + " is not valid");
+                                }
 
-    currentPage = getCurrentPageNumber(currentPageStr);
-    int pageCount = customerService.totalPage(customerService, searchForm);
-    page = customerService.getAction(currentPage, searchForm, pageCount);
-
-    setIndexPage(searchForm, page);
-
-    cus = customerService.handleSearch(searchForm, customerService, request);
-    setSearchFormAttributes(request, searchForm, cus, page);
-
-    customerService.disableButtonsBasedOnPageCount(searchForm, customerService, cus, request, pageCount, page);
-
-    return mapping.findForward(forward);
-}
-
-private String getCurrentPage(SearchForm searchForm) {
-    return Constants.MODE_SEARCH.equals(searchForm.getsMode()) ? null : searchForm.getCurrentPage();
-}
-
-private String displayUsername(HttpSession session, SearchForm searchForm, String forward) {
-    MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
-    if (userLoginSuccess != null) {
-        searchForm.setUserLoginSuccess(userLoginSuccess.getUserName());
-    } else {
-        forward = Constants.FORWARD_FAILURE;
-    }
-    return forward;
-}
-
-private int getCurrentPageNumber(String currentPageStr) {
-    return (currentPageStr != null && !currentPageStr.isEmpty()) ? Integer.parseInt(currentPageStr) : Constants.PAGE_ONE;
-}
-
-private void setIndexPage(SearchForm searchForm, int page) {
-    int indexPage = (page - 1) * Constants.TOTAL_ITEM;
-    searchForm.setIndex(indexPage);
-}
-
-private void setSearchFormAttributes(HttpServletRequest request, SearchForm searchForm, List<MSTCUSTOMER> cus, int page) {
-    searchForm.setCurrentPage(String.valueOf(page));
-    searchForm.setPageData(cus);
-    request.setAttribute("searchForm", searchForm);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
-		String forward = Constants.FORWARD_SUCCESS;
-		SearchForm searchForm = (SearchForm) form;
-		String modeSearch = searchForm.getsMode();
-		HttpSession session = request.getSession(true);
-		
-		//Assign initial value
-		List<MSTCUSTOMER> cus = null;
-		String currentPageStr = null;
-		int currentPage;
-		int page = 0;
-		 
-		SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
-		
-		if(!Constants.MODE_SEARCH.equals(modeSearch)) {
-			currentPageStr = searchForm.getCurrentPage();
-		} 
-		
-		//Display username in search screen
-		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
-		if (userLoginSuccess != null) {
-			searchForm.setUserLoginSuccess(userLoginSuccess.getUserName());
-		} else {
-			forward = Constants.FORWARD_FAILURE;
-		}
-		
-		//If there is a current page, take out page one
-		if (currentPageStr != null && !currentPageStr.isEmpty()) {
-			currentPage = Integer.parseInt(currentPageStr);
-		} else {
-			currentPage = Constants.PAGE_ONE;
-		}
-		
-		//Get the total number of search results items
-		int pageCount = customerService.totalPage(customerService, searchForm);
-			
-		page = customerService.getAction(currentPage, searchForm, pageCount);
-		
-		//Calculate the index position value to display the page number
-		int indexPage = (page-1)*Constants.TOTAL_ITEM;
-		searchForm.setIndex(indexPage);
-		
-		cus = customerService.handleSearch(searchForm, customerService, request);
-		searchForm.setCurrentPage(String.valueOf(page));
-		searchForm.setPageData(cus);
-		request.setAttribute("searchForm", searchForm);
-
-		//Display buttons as desired
-		customerService.disableButtonsBasedOnPageCount(searchForm, customerService, cus, request, pageCount, page);
-		return mapping.findForward(forward);
-	}
-
-
-
-
-
-
-
-
-những xử lý mà liên quan đến searchForm thì phải đưa nó về SearchService
-
-
-File Action
-
-public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
-		String forward = Constants.FORWARD_SUCCESS;
-		SearchForm searchForm = (SearchForm) form;
-		String modeSearch = searchForm.getsMode();
-		HttpSession session = request.getSession(true);
-		
-		//Assign initial value
-		List<MSTCUSTOMER> cus = null;
-		String currentPageStr = null;
-		int currentPage;
-		int page = 0;
-		 
-		SearchService customerService = (SearchService) getWebApplicationContext().getBean(Constants.BEAN_SEARCH);
-		
-		if(!Constants.MODE_SEARCH.equals(modeSearch)) {
-			currentPageStr = searchForm.getCurrentPage();
-		} 
-		
-		//Display username in search screen
-		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
-		if (userLoginSuccess != null) {
-			searchForm.setUserLoginSuccess(userLoginSuccess.getUserName());
-		} else {
-			forward = Constants.FORWARD_FAILURE;
-		}
-		
-		//If there is a current page, take out page one
-		if (currentPageStr != null && !currentPageStr.isEmpty()) {
-			currentPage = Integer.parseInt(currentPageStr);
-		} else {
-			currentPage = Constants.PAGE_ONE;
-		}
-		
-		//Get the total number of search results items
-		int pageCount = totalPage(customerService, searchForm);
-			
-		page = getAction(currentPage, searchForm, pageCount);
-		
-		//Calculate the index position value to display the page number
-		int indexPage = (page-1)*Constants.TOTAL_ITEM;
-		searchForm.setIndex(indexPage);
-		
-		cus = handleSearch(searchForm, customerService, request);
-		searchForm.setCurrentPage(String.valueOf(page));
-		searchForm.setPageData(cus);
-		request.setAttribute("searchForm", searchForm);
-
-		//Display buttons as desired
-		disableButtonsBasedOnPageCount(searchForm, customerService, cus, request, pageCount, page);
-		return mapping.findForward(forward);
-	}
-	
-	/**
-     * Set flags for button disabling based on the pageCount.
-     * 
-     * @param request   HttpServletRequest object for setting attributes
-     * @param pageCount Page count total
-     */
-    private void disableButtonsBasedOnPageCount(SearchForm searchForm, SearchService customerService, List<MSTCUSTOMER> cus, HttpServletRequest request, int pageCount , int page) {
-    	int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);    	
-    	
-    	//In case the total number of pages is zero
-    	if (pageCount == 0) {
-    		searchForm.setIsdisableFirst(true);
-    		searchForm.setIsdisablePrevious(true);
-    		searchForm.setIsdisableNext(true);
-    		searchForm.setIsdisableLast(true);
-    		searchForm.setIsdisableDelete(true);
-    		
-    	//Also if the total number of pages is greater than zero and less than the total number of items
-        } else if (pageCount > 0 && countCustomer <= Constants.TOTAL_ITEM) {
-        	searchForm.setIsdisableFirst(true);
-    		searchForm.setIsdisablePrevious(true);
-    		searchForm.setIsdisableNext(true);
-    		searchForm.setIsdisableLast(true);
-    		
-    	//In addition, the total number of pages is equal to one
-        } else if (page == Constants.PAGE_ONE) {
-        	searchForm.setIsdisableFirst(true);
-    		searchForm.setIsdisablePrevious(true);
-    		
-    	//Also if the current page is equal to the max page number
-        } else if (page == pageCount) {
-        	searchForm.setIsdisableNext(true);
-    		searchForm.setIsdisableLast(true);
+                            } catch (DateTimeParseException e) {
+                                System.out.println("Lỗi: Line " + (i + 2) + " - Birthday " + birthdayFrom + " is not in valid format");
+                            }
+                        }
+                        
+                     // Kiểm tra định dạng và tính hợp lệ của email
+                        if (email != null && !isValidEmail(email)) {
+                            System.out.println("Lỗi: Line " + (i + 2) + " - Email " + email + " is not in valid format");
+                        }
+                    }
+                    
+                    
+                }
+            }
         }
-    }
-	
-	/**
-	 * Calculate total number of pages
-	 * 
-	 * @param customerService 	Call the get count page function
-	 * @return pageCount 		Page count total
-	 */
-	private int totalPage(SearchService customerService, SearchForm searchForm) {
-		int countCustomer = (int)customerService.countCustomerSearchResults(searchForm);
-		int pageCount = (int)Math.ceil(countCustomer / Constants.TOTAL_ITEM);
-		if (countCustomer % Constants.TOTAL_ITEM != 0) {
-			pageCount++;
-		}
-		return pageCount;
-	}
+        
 
-	/**
-	 * Process searches based on user criteria
-	 * 
-	 * @param searchForm    Form value of search screen
-	 * @param searchResult  A input list to search
-	 * @param request       HttpServletRequest object for setting attributes
-	 * @return              Returns a search list, or null if there are validation errors
-	 */
-	private List<MSTCUSTOMER> handleSearch(SearchForm searchForm, SearchService searchResult, HttpServletRequest request) {
-	    List<MSTCUSTOMER> resultSearch = searchResult.getCustomerSearchResults(searchForm);
-	    return resultSearch;
+		return mapping.findForward("T004");
 	}
 	
-	/**
-	 * Pagination action
-	 * 
-	 * @param currentPage  Current page location
-	 * @param searchForm   Search form data
-	 * @param endPage	   Last page  
-	 * @return 			   Returns the current page position
-	 */
-	private int getAction(int currentPage, SearchForm searchForm, int endPage) {
-		String mode = searchForm.getsMode();
-
-		// If MODE_FIRST is enabled, the current page is equal to one
-		if (Constants.MODE_FIRST.equals(mode)) {
-			return 1;
-
-			/**
-			 * If MODE_PREVIOUS mode is enabled, the current page is reduced by one and the
-			 * smallest is page one
-			 */
-		} else if (Constants.MODE_PREVIOUS.equals(mode)) {
-			return Math.max(currentPage - 1, 1);
-
-			/**
-			 * If MODE_NEXT mode is enabled, increase the current page by one and the
-			 * largest page is pageMax
-			 */
-		} else if (Constants.MODE_NEXT.equals(mode)) {
-			return Math.min(currentPage + 1, endPage);
-
-			/**
-			 * If MODE_LAST mode is enabled, it will be the last page
-			 */
-		} else if (Constants.MODE_LAST.equals(mode)) {
-			return endPage;
-		}
-		return currentPage;
-	}
-
-
-File Service
-
-public class SearchService {
-	private CustomerDao customerDao;
-
-	public void setCustomerDao(CustomerDao customerDao) {
-		this.customerDao = customerDao;
+	private static boolean isValidDate(LocalDate date) {
+	    try {
+	        LocalDate.parse(date.toString()); // Kiểm tra định dạng lại để kiểm tra ngày có hợp lệ không
+	        return true;
+	    } catch (DateTimeParseException e) {
+	        return false;
+	    }
 	}
 	
-	/**
-	 * Get user search data based on form searches
-	 * 
-	 * @param  searchForm Search screen form value
-	 * @return a list of customers
-	 */
-	public List<MSTCUSTOMER> getCustomerSearchResults(SearchForm searchForm) {
-		return customerDao.getCustomerSearchResults(searchForm);
+	private static boolean isValidEmail(String email) {
+	    // Kiểm tra định dạng cơ bản của email
+	    String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+
+	    // Kiểm tra độ dài không vượt quá giới hạn của địa chỉ email
+	    if (email.length() > 320) {
+	        return false;
+	    }
+
+	    // Kiểm tra định dạng email bằng cách so khớp với regex
+	    return email.matches(emailRegex);
 	}
-	
-	/**
-	 * Get the number of customer search results
-	 * 
-	 * @param searchForm Search screen form value
-	 * @return Number of customer search records
-	 */
-	public long countCustomerSearchResults(SearchForm searchForm) {
-		return customerDao.countCustomerSearchResults(searchForm);
-	}
+
 }
+
+
+
+
+
+
+
+private FormFile file;
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@include file="../common/taglib.jsp" %>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Login - Training</title>
+<style type="text/css">
+	<%@include file="../WEB-INF/css/T001.css" %>
+</style>
+</head>
+<style>
+	.main-container {
+    position: relative;
+	}
+	
+	.customButton {
+	    position: absolute;
+	    top: 0;
+	    right: 0;
+	    padding: 10px 15px;
+	    background-color: #4CAF50;
+	    color: white;
+	    cursor: pointer;
+	    border: none;
+	    border-radius: 5px;
+	}
+
+</style>
+<body>
+<%@include file="../common/web/header.jsp" %>
+
+<form id="form-import" action="./Import.do" method="POST" enctype="multipart/form-data" onsubmit="return handleImport()">
+    <div class="main-container">
+        <input type="text" id="importText" name="importText" readonly />
+        <label for="fileInput" class="customButton">Browse</label>
+        <input type="file" id="fileInput" name="file" style="display: none;" /> <!-- Đổi tên trường để phù hợp với form bean -->
+    </div>
+    <div class="btn-import">
+        <button id="importButton" name="action" value="import">Import</button>
+        <button type="button" id="cancelButton">Cancel</button>
+    </div>
+</form>
+
+	
+<%@include file="../common/web/footer.jsp" %>
+<script>
+	document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+	    
+	function handleFileSelect() {
+	    var fileInput = document.getElementById('fileInput');
+	    var importText = document.getElementById('importText');
+
+	    // Lấy tên file từ input file
+	    var fileName = fileInput.files[0].name;
+
+	    // Hiển thị tên file trong input text
+	    importText.value = fileName;
+	}
+	function handleImport() {
+	    var fileInput = document.getElementById('fileInput');
+	    var importText = document.getElementById('importText');
+	
+	    // Kiểm tra nếu không có file import
+	    if (fileInput.files.length === 0) {
+	        alert("File import is not existed!");
+	        return false;
+	    }
+	
+	    // Kiểm tra phần mở rộng của file
+	    var fileName = fileInput.files[0].name;
+	    var fileExtension = fileName.split('.').pop().toLowerCase();
+	    if (fileExtension !== 'csv') {
+	        alert("File import is invalid");
+	        return false;
+	    }
+	
+	    // Kiểm tra kích thước hoặc nội dung của file import
+	    if (fileInput.files[0].size === 0) {
+	        alert("File import is empty");
+	        return false;
+	    }
+	    
+	    return true;
+	}
+</script>
+
+
+</body>
+</html>
+
+
+
+
+-----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
