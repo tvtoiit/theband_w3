@@ -4,6 +4,200 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.upload.FormFile;
+import org.springframework.web.struts.ActionSupport;
+
+import fjs.cs.common.Constants;
+import fjs.cs.form.ImportForm;
+import fjs.cs.model.MSTCUSTOMER;
+import fjs.cs.model.MSTUSER;
+import fjs.cs.service.ImportService;
+
+
+
+public class ImportAction extends ActionSupport {
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		ImportForm importForm = (ImportForm) form;
+		HttpSession session = request.getSession(true);
+		
+		//Check if you are logged in, if not, proceed forward
+		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
+		if (userLoginSuccess != null) {
+			importForm.setUserLoginSuccess(userLoginSuccess.getUserName());
+		} else {
+			forward = Constants.FORWARD_LOGOUT;
+			return mapping.findForward(forward);
+		}
+		
+		ImportService importService = (ImportService) getWebApplicationContext().getBean(Constants.BEAN_IMPORT);
+		List<MSTCUSTOMER> listCustomer = importService.getAllCustomer();
+		
+		FormFile file = importForm.getFile();
+		if(file != null) {
+			String fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
+            String[] lines = fileContent.split("\n");
+
+            for (int i = 1; i < lines.length; i++) {
+                String line = lines[i];
+                String[] columns = line.split(",");
+                
+                if (columns.length >= 1) {
+                    String customerIdFromFile = columns[0].replace("\"", ""); 
+                    boolean customerError = false;
+                    
+                    if (customerIdFromFile != null && !customerIdFromFile.trim().isEmpty()) {
+                    	List<String> listMessage = new ArrayList<>();
+                        for (int index = 0; index < listCustomer.size(); index++) {
+                            MSTCUSTOMER customer = listCustomer.get(index);
+                            String customerId = String.valueOf(customer.getCustomerId());
+                            if (customerId.equals(customerIdFromFile)) {
+                            	customerError = true;
+                                String messageError = "Line " + (i + 2) + " CUSTOMER_ID= " + customerIdFromFile + " is not existed";
+                                
+                                listMessage.add(messageError);
+                            
+                            }
+                        }
+                        request.setAttribute("messageError", listMessage);
+                    }
+                    
+                    if (!customerError) {
+                    	String customerNameFromFile = columns[1].replace("\"", "");
+                    	for (int index = 0; index < listCustomer.size(); index++) {
+                    		if (customerNameFromFile != null && customerNameFromFile.length() > 50) {
+                                System.out.println("Line {" + (i + 2) + "} - CUSTOMER_NAME value is more than 50 characters");
+                            }
+                    	} 
+                    }
+                    
+                    if(!customerError) {
+                    	String customerSexFromFile = columns[2].replace("\"", "");
+                    	for (int index = 0; index < listCustomer.size(); index++) {
+                    		if (!"Male".equals(customerSexFromFile) && !"Female".equals(customerSexFromFile)) {
+                                System.out.println("Line " + (i + 2) + ", SEX" + customerSexFromFile + " is not valid");
+                            }
+                    	}
+                    }
+                    
+                    if (!customerError) {
+                    	String customerBirthDayFromFile = columns[3].replace("\"", "");
+                    	for (int index = 0; index < listCustomer.size(); index++) {
+	            			 try {
+	                             // Check date format
+	                             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+	                             LocalDate parsedDate = LocalDate.parse(customerBirthDayFromFile, formatter);
+	
+	                             // Check the validity of the date
+	                             if (!isValidDate(parsedDate)) {
+	                                 System.out.println("Line " + (i + 2) + " :BIRTHDAY= " + customerBirthDayFromFile + " is invalid");
+	                             }
+	
+	                         } catch (DateTimeParseException e) {
+	                             e.printStackTrace();
+	                         }
+                    	}
+                    }
+                    
+                    if (!customerError) {
+                    	String customerEmailFromFile = columns[4].replace("\"", "");
+                    	for (int index = 0; index < listCustomer.size(); index++) {
+                    		if (customerEmailFromFile != null && !isValidEmail(customerEmailFromFile)) {
+                                System.out.println("Line " + (i + 2) + " :Email= " + customerEmailFromFile + " is invalid");
+                            }
+                    	}
+                    	
+                    }
+                    
+                    if (!customerError) {
+                    	String customerEmailFromFile = columns[4].replace("\"", "");
+                    	for (int index = 0; index < listCustomer.size(); index++) {
+                    		if (customerEmailFromFile != null && customerEmailFromFile.length() > 40) {
+                                System.out.println("Line {" + (i + 2) + "} :Email is more than 40 characters");
+                            }
+                    	}
+                    	
+                    }
+                    
+                    if (!customerError) {
+                    	String customerAddressFromFile = columns[5].replace("\"", "");
+                    	for (int index = 0; index < listCustomer.size(); index++) {
+                    		if (customerAddressFromFile != null && customerAddressFromFile.length() > 256) {
+                        		System.out.println("Line {" + (i + 2) + "} :Value of ADDRESS is more than 40 characters");
+                        	}
+                    	}
+                    }
+                }
+             }
+		}
+		return mapping.findForward(forward);
+	}
+	
+	private static boolean isValidEmail(String email) {
+	    //Check the basic format of the email
+	    String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+
+	    //Check email format by regex matching
+	    return email.matches(emailRegex);
+	}
+	
+	private static boolean isValidDate(LocalDate date) {
+	    try {
+	    	//Test the format again to check if the date is valid
+	        LocalDate.parse(date.toString());
+	        return true;
+	    } catch (DateTimeParseException e) {
+	        return false;
+	    }
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package fjs.cs.action;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
