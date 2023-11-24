@@ -1,14 +1,4 @@
-<html:form id="form-import" action="/Import.do" method="POST" enctype="multipart/form-data" onsubmit="return handleImport()">
-    <div class="main-container__input">
-	<input type="text" maxlength="50" id="importText" name="importText" readonly />
-	<label for="fileInput" class="customButton">Browse</label>
-	<input type="file" id="fileInput" name="file" style="display: none;" />
-    </div>
-    <div class="btn-import">
-	<button id="importButton" class="btn-import__style" name="action" value="import">Import</button>
-	<button type="button" class="btn-import__style" id="cancelButton">Cancel</button>
-    </div>
-</html:form>
+<html:text maxlength="50" styleId="importText" property="importText" readonly />
 
 
 
