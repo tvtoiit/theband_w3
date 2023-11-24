@@ -1,70 +1,14 @@
-public List<String> checkDataInport(ImportForm importForm) throws FileNotFoundException, IOException {
-    FormFile file = importForm.getFile();
-    List<String> errorMessages = new ArrayList<>();
-
-    if (file != null) {
-        String fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
-        String[] lines = fileContent.split("\n");
-        List<MSTCUSTOMER> listCustomer = getAllCustomer();
-
-        for (int i = 1; i < lines.length; i++) {
-            String line = lines[i];
-            String[] columns = line.split(",");
-
-            if (columns.length >= 6) {
-                String customerIdFromFile = columns[0].replace("\"", "").trim();
-                String customerNameFromFile = columns[1].replace("\"", "").trim();
-                String customerSexFromFile = columns[2].replace("\"", "").trim();
-                String customerBirthDayFromFile = columns[3].replace("\"", "").trim();
-                String customerEmailFromFile = columns[4].replace("\"", "").trim();
-                String customerAddressFromFile = columns[5].replace("\"", "").trim();
-
-                // Validate CUSTOMER_ID
-                boolean idExists = listCustomer.stream().anyMatch(customer -> String.valueOf(customer.getCustomerId()).equals(customerIdFromFile));
-                if (!idExists) {
-                    errorMessages.add("Line " + (i + 2) + " : CUSTOMER_ID=" + customerIdFromFile + " is not existed");
-                }
-
-                // Validate CUSTOMER_NAME length
-                if (customerNameFromFile.isEmpty()) {
-                    errorMessages.add("Line " + (i + 2) + " : CUSTOMER_NAME is empty");
-                } else if (customerNameFromFile.length() > 50) {
-                    errorMessages.add("Line " + (i + 2) + " : Value of CUSTOMER_NAME is more than 50 characters");
-                }
-
-                // Validate SEX validity
-                if (!"Male".equals(customerSexFromFile) && !"Female".equals(customerSexFromFile)) {
-                    errorMessages.add("Line " + (i + 2) + " : SEX=" + customerSexFromFile + " is invalid");
-                }
-
-                // Validate BIRTHDAY format and validity
-                try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-                    LocalDate parsedDate = LocalDate.parse(customerBirthDayFromFile, formatter);
-
-                    if (!isValidDate(parsedDate)) {
-                        errorMessages.add("Line " + (i + 2) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
-                    }
-                } catch (DateTimeParseException e) {
-                    errorMessages.add("Line " + (i + 2) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
-                }
-
-                // Validate EMAIL format and length
-                if (!isValidEmail(customerEmailFromFile)) {
-                    errorMessages.add("Line " + (i + 2) + " : EMAIL=" + customerEmailFromFile + " is invalid");
-                } else if (customerEmailFromFile.length() > 40) {
-                    errorMessages.add("Line " + (i + 2) + " : Value of EMAIL is more than 40 characters");
-                }
-
-                // Validate ADDRESS length
-                if (customerAddressFromFile.length() > 256) {
-                    errorMessages.add("Line " + (i + 2) + " : Value of ADDRESS is more than 256 characters");
-                }
-            }
-        }
-    }
-    return errorMessages;
-}
+<html:form id="form-import" action="/Import.do" method="POST" enctype="multipart/form-data" onsubmit="return handleImport()">
+    <div class="main-container__input">
+	<input type="text" maxlength="50" id="importText" name="importText" readonly />
+	<label for="fileInput" class="customButton">Browse</label>
+	<input type="file" id="fileInput" name="file" style="display: none;" />
+    </div>
+    <div class="btn-import">
+	<button id="importButton" class="btn-import__style" name="action" value="import">Import</button>
+	<button type="button" class="btn-import__style" id="cancelButton">Cancel</button>
+    </div>
+</html:form>
 
 
 
