@@ -1,5 +1,36 @@
-String allErrors = String.join(",\n", errorMessages);
-    return Arrays.asList(allErrors.split(",\n"));
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+public void downloadErrorFile(List<String> errorMessages) {
+    try {
+        // Tạo tên tệp ngẫu nhiên
+        String fileName = "error_file_" + System.currentTimeMillis() + ".txt";
+        Path filePath = Path.of(fileName);
+
+        // Ghi danh sách lỗi vào tệp
+        Files.write(filePath, errorMessages, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+
+        // Gửi tệp về client để tải xuống
+        HttpServletResponse response = getServletResponse(); // Đảm bảo bạn có đối tượng HttpServletResponse
+        response.setContentType("text/plain");
+        response.setHeader("Content-disposition", "attachment; filename=" + fileName);
+
+        // Đọc từ tệp và ghi vào đầu ra
+        Files.copy(filePath, response.getOutputStream());
+
+        // Xóa tệp sau khi tải về xong (tuỳ chọn)
+        Files.deleteIfExists(filePath);
+    } catch (IOException e) {
+        e.printStackTrace(); // Xử lý lỗi tùy ý
+    }
+}
+
+
+
+
+
+
 
 
 
