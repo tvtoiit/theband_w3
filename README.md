@@ -1,3 +1,46 @@
+public void insertCustomer(MSTCUSTOMER customer) {
+        Transaction tx = null;
+        try {
+            tx = getSession().beginTransaction();
+
+            // Assuming MSTCUSTOMER class has corresponding properties and getters
+            StringBuilder hpl = new StringBuilder("INSERT INTO " + Constants.TABLE_CUSTOMER +" (CUSTOMER_NAME, SEX, BIRTHDAY, EMAIL, ADDRESS, DELETE_YMD, INSERT_YMD, INSERT_PSN_CD, UPDATE_YMD, UPDATE_PSN_CD)");
+            hpl.append("VALUES (:customerName, :sex, :birthday, :email, :address, NULL, CURRENT_TIMESTAMP, :insertPsnCd, CURRENT_TIMESTAMP, :updatePsnCd)");
+
+            Query query = getSession().createSQLQuery(hpl.toString());
+
+            // Set parameters using named parameters
+            query.setParameter("customerName", customer.getCustomerName());
+            query.setParameter("sex", customer.getSex());
+            query.setParameter("birthday", customer.getBirthDay());
+            query.setParameter("email", customer.getEmail());
+            query.setParameter("address", customer.getAddress());
+            query.setParameter("insertPsnCd", customer.getInsertPSNCD());
+            query.setParameter("updatePsnCd", customer.getUpdatePSNCD());
+
+            query.executeUpdate();
+            tx.commit();
+        } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } 
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Kiểm tra nếu CUSTOMER_ID không rỗng
 if (!customerIdFromFile.isEmpty()) {
     // Tìm xem có CUSTOMER_ID nào giống với customerIdFromFile trong danh sách không
