@@ -1,4 +1,4 @@
-private FormFile file;
+[Line 2 : CUSTOMER_ID=6 is not existed, Line 2 : CUSTOMER_NAME is empty, Line 3 : CUSTOMER_ID=19 is not existed, Line 3 : Value of CUSTOMER_NAME is more than 50 characters, Line 3 : SEX=Duong Ani BBTraBTran Thi BDuong Ani BBTraBTran Thi BMDuong Ani BBTraBTran Thi BaDuong Ani BBTraBTran Thi BDuong Ani BBTraBTran Thi BDuong Ani BBTraBTran Thi BDuong Ani BBTraBTran Thi BDuong Ani BBTraBTran Thi Ble is invalid]
 
 
 
