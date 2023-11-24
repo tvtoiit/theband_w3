@@ -1,3 +1,11 @@
+Cannot insert explicit value for identity column in table 'MSTCUSTOMER' when IDENTITY_INSERT is set to OFF.
+
+
+
+
+
+
+
 public void checkDataInport(ImportForm importForm) throws FileNotFoundException, IOException {
     FormFile file = importForm.getFile();
 
