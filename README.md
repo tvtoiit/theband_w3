@@ -1,4 +1,8 @@
-<html:text maxlength="50" styleId="importText" property="importText" readonly />
+private FormFile file;
+
+
+
+<html:file styleId="fileInput" property="file" style="display: none;" />
 
 
 
