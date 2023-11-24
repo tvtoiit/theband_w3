@@ -1,3 +1,94 @@
+public void checkDataInport(ImportForm importForm) throws FileNotFoundException, IOException {
+    FormFile file = importForm.getFile();
+
+    if (file != null) {
+        String fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
+        String[] lines = fileContent.split("\n");
+        List<MSTCUSTOMER> listCustomer = getAllCustomer();
+
+        for (int i = 1; i < lines.length; i++) {
+            String line = lines[i];
+            String[] columns = line.split(",");
+
+            if (columns.length >= 6) { // Ensure all necessary columns are present
+                String customerIdFromFile = columns[0].replace("\"", "").trim();
+                String customerNameFromFile = columns[1].replace("\"", "").trim();
+                String customerSexFromFile = columns[2].replace("\"", "").trim();
+                String customerBirthDayFromFile = columns[3].replace("\"", "").trim();
+                String customerEmailFromFile = columns[4].replace("\"", "").trim();
+                String customerAddressFromFile = columns[5].replace("\"", "").trim();
+
+                List<String> listMessage = new ArrayList<>();
+
+                // Check CUSTOMER_ID existence
+                if (!customerIdFromFile.isEmpty() && listCustomer.stream().noneMatch(c -> String.valueOf(c.getCustomerId()).equals(customerIdFromFile))) {
+                    listMessage.add("Line " + (i + 2) + " : CUSTOMER_ID=" + customerIdFromFile + " is not existed");
+                }
+
+                // Check CUSTOMER_NAME length
+                if (customerNameFromFile.isEmpty()) {
+                    listMessage.add("Line " + (i + 2) + " : CUSTOMER_NAME is empty");
+                } else if (customerNameFromFile.length() > 50) {
+                    listMessage.add("Line " + (i + 2) + " : Value of CUSTOMER_NAME is more than 50 characters");
+                }
+
+                // Check SEX validity
+                if (!"Male".equals(customerSexFromFile) && !"Female".equals(customerSexFromFile)) {
+                    listMessage.add("Line " + (i + 2) + " : SEX=" + customerSexFromFile + " is invalid");
+                }
+
+                // Check BIRTHDAY format and validity
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+                    LocalDate parsedDate = LocalDate.parse(customerBirthDayFromFile, formatter);
+
+                    if (!isValidDate(parsedDate)) {
+                        listMessage.add("Line " + (i + 2) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
+                    }
+                } catch (DateTimeParseException e) {
+                    listMessage.add("Line " + (i + 2) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
+                }
+
+                // Check EMAIL format and length
+                if (!isValidEmail(customerEmailFromFile)) {
+                    listMessage.add("Line " + (i + 2) + " : EMAIL=" + customerEmailFromFile + " is invalid");
+                } else if (customerEmailFromFile.length() > 40) {
+                    listMessage.add("Line " + (i + 2) + " : Value of EMAIL is more than 40 characters");
+                }
+
+                // Check ADDRESS length
+                if (customerAddressFromFile.length() > 256) {
+                    listMessage.add("Line " + (i + 2) + " : Value of ADDRESS is more than 256 characters");
+                }
+
+                // Display or handle error messages here
+                if (!listMessage.isEmpty()) {
+                    for (String errorMessage : listMessage) {
+                        System.out.println(errorMessage);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Tiến hành check tuần tự từ dòng thứ 1 của data cho đến hết (hiển thị tất cả các dòng bị lỗi cùng lúc)																																																																													
 	Trường hợp CUSTOMER_ID của dòng đang check là khác empty và đang không tồn tại tại table MSTCUSTOMER (record có DELETE_YMD khác NULL xem là không tồn tại),																																																																												
 		thì tiến hành xuất ra message (alert) : "Line {0} : CUSTOMER_ID={1} is not existed", với {0} là index và {1} là trị CUSTOMER_ID của dòng đang check.																																																																											
