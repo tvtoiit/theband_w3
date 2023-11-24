@@ -2,14 +2,21 @@ public void insertCustomer(MSTCUSTOMER customer) {
         Transaction tx = null;
         try {
             tx = getSession().beginTransaction();
-
+            
             // Assuming MSTCUSTOMER class has corresponding properties and getters
-            StringBuilder hpl = new StringBuilder("INSERT INTO " + Constants.TABLE_CUSTOMER +" (CUSTOMER_NAME, SEX, BIRTHDAY, EMAIL, ADDRESS, DELETE_YMD, INSERT_YMD, INSERT_PSN_CD, UPDATE_YMD, UPDATE_PSN_CD)");
-            hpl.append("VALUES (:customerName, :sex, :birthday, :email, :address, NULL, CURRENT_TIMESTAMP, :insertPsnCd, CURRENT_TIMESTAMP, :updatePsnCd)");
+            StringBuilder hpl = new StringBuilder("INSERT INTO " + Constants.TABLE_CUSTOMER +" (CUSTOMER_ID,CUSTOMER_NAME, SEX, BIRTHDAY, EMAIL, ADDRESS, DELETE_YMD, INSERT_YMD, INSERT_PSN_CD, UPDATE_YMD, UPDATE_PSN_CD)");
+            hpl.append("VALUES (:customerId, :customerName, :sex, :birthday, :email, :address, NULL, CURRENT_TIMESTAMP, :insertPsnCd, CURRENT_TIMESTAMP, :updatePsnCd)");
 
             Query query = getSession().createSQLQuery(hpl.toString());
-
             // Set parameters using named parameters
+            int customerId = customer.getCustomerId();
+            long customerIdResult = 0;
+            if (customerId == 0) {
+            	String sqlSEQ = "SELECT NEXT VALUE FOR SEQ_CUSTOMER_ID";
+            	Query querySEQ = getSession().createSQLQuery(sqlSEQ);
+            	customerIdResult = (long)querySEQ.uniqueResult();
+            }
+            query.setParameter("customerId", customer.getCustomerId() == 0 ? customerIdResult : customer.getCustomerId());
             query.setParameter("customerName", customer.getCustomerName());
             query.setParameter("sex", customer.getSex());
             query.setParameter("birthday", customer.getBirthDay());
