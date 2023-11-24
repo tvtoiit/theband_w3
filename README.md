@@ -1,6 +1,37 @@
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.UUID;
+
+public String saveErrorFile(List<String> errorMessages) {
+    try {
+        // Tạo tên tệp ngẫu nhiên
+        String fileName = "error_file_" + UUID.randomUUID() + ".txt";
+        Path filePath = Path.of(fileName);
+
+        // Ghi danh sách lỗi vào tệp
+        Files.write(filePath, errorMessages, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+
+        // Trả về đường dẫn tới tệp để người dùng có thể tải xuống
+        return filePath.toString();
+    } catch (IOException e) {
+        e.printStackTrace(); // Xử lý lỗi tùy ý
+        return null;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public void downloadErrorFile(List<String> errorMessages) {
     try {
