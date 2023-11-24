@@ -1,3 +1,33 @@
+// Kiểm tra nếu CUSTOMER_ID không rỗng
+if (!customerIdFromFile.isEmpty()) {
+    // Tìm xem có CUSTOMER_ID nào giống với customerIdFromFile trong danh sách không
+    boolean idExists = false;
+    for (MSTCUSTOMER customer : listCustomer) {
+        if (String.valueOf(customer.getCustomerId()).equals(customerIdFromFile)) {
+            // Nếu có CUSTOMER_ID giống, đặt biến idExists thành true
+            idExists = true;
+            break;
+        }
+    }
+
+    // Nếu không có CUSTOMER_ID giống, thêm thông báo lỗi vào danh sách
+    if (!idExists) {
+        listMessage.add("Line " + (i + 2) + " : CUSTOMER_ID=" + customerIdFromFile + " is not existed");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 SET IDENTITY_INSERT MSTCUSTOMER ON;
 
 INSERT INTO MSTCUSTOMER (CustomerID, CustomerName, Sex, Birthday, Email, Address)
