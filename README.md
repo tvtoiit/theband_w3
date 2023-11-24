@@ -1,3 +1,113 @@
+public void checkDataInport(ImportForm importForm, HttpServletRequest request) throws FileNotFoundException, IOException {
+	    FormFile file = importForm.getFile();
+
+	    if (file != null) {
+	        String fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
+	        String[] lines = fileContent.split("\n");
+	        List<MSTCUSTOMER> listCustomer = getAllCustomer();
+	        List<String> listMessage = null;
+	        for (int i = 1; i < lines.length; i++) {
+	            String line = lines[i];
+	            String[] columns = line.split(",");
+
+	            if (columns.length >= 6) { // Ensure all necessary columns are present
+	                String customerIdFromFile = columns[0].replace("\"", "").trim();
+	                String customerNameFromFile = columns[1].replace("\"", "").trim();
+	                String customerSexFromFile = columns[2].replace("\"", "").trim();
+	                String customerBirthDayFromFile = columns[3].replace("\"", "").trim();
+	                String customerEmailFromFile = columns[4].replace("\"", "").trim();
+	                String customerAddressFromFile = columns[5].replace("\"", "").trim();
+
+	                listMessage = new ArrayList<>();
+
+	                // Kiểm tra nếu CUSTOMER_ID không rỗng
+	                if (!customerIdFromFile.isEmpty()) {
+	                   
+	                    boolean idExists = false;
+	                    for (MSTCUSTOMER customer : listCustomer) {
+	                    	String customerId = String.valueOf(customer.getCustomerId());
+	                        if (customerId.equals(customerIdFromFile)) {
+	                            // Nếu có CUSTOMER_ID giống, đặt biến idExists thành true
+	                        	listMessage.add("Line " + (i + 2) + " : CUSTOMER_ID=" + customerIdFromFile + " is not existed");
+	                            //break;
+	                        }
+	                    }
+
+	                    // Nếu không có CUSTOMER_ID giống, thêm thông báo lỗi vào danh sách
+	                   
+	                }
+
+	                if (!listMessage.isEmpty()) {
+	                    for (String errorMessage : listMessage) {
+	                    	 request.setAttribute("listMessage", listMessage);
+	                    }
+	                }
+
+	                // Check CUSTOMER_NAME length
+	                if (customerNameFromFile.isEmpty()) {
+	                    listMessage.add("Line " + (i + 2) + " : CUSTOMER_NAME is empty");
+	                } else if (customerNameFromFile.length() > 50) {
+	                    listMessage.add("Line " + (i + 2) + " : Value of CUSTOMER_NAME is more than 50 characters");
+	                }
+
+	                // Check SEX validity
+	                if (!"Male".equals(customerSexFromFile) && !"Female".equals(customerSexFromFile)) {
+	                    listMessage.add("Line " + (i + 2) + " : SEX=" + customerSexFromFile + " is invalid");
+	                }
+
+	                // Check BIRTHDAY format and validity
+	                try {
+	                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+	                    LocalDate parsedDate = LocalDate.parse(customerBirthDayFromFile, formatter);
+
+	                    if (!isValidDate(parsedDate)) {
+	                        listMessage.add("Line " + (i + 2) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
+	                    }
+	                } catch (DateTimeParseException e) {
+	                    listMessage.add("Line " + (i + 2) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
+	                }
+
+	                // Check EMAIL format and length
+	                if (!isValidEmail(customerEmailFromFile)) {
+	                    listMessage.add("Line " + (i + 2) + " : EMAIL=" + customerEmailFromFile + " is invalid");
+	                } else if (customerEmailFromFile.length() > 40) {
+	                    listMessage.add("Line " + (i + 2) + " : Value of EMAIL is more than 40 characters");
+	                }
+
+	                // Check ADDRESS length
+	                if (customerAddressFromFile.length() > 256) {
+	                    listMessage.add("Line " + (i + 2) + " : Value of ADDRESS is more than 256 characters");
+	                }
+
+	                // Display or handle error messages here
+	                
+	            }
+	        }
+	        request.setAttribute("listMessage", listMessage);
+	    }
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public void insertCustomer(MSTCUSTOMER customer) {
     Transaction tx = null;
     try {
