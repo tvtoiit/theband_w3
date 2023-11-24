@@ -1,3 +1,19 @@
+SET IDENTITY_INSERT MSTCUSTOMER ON;
+
+INSERT INTO MSTCUSTOMER (CustomerID, CustomerName, Sex, Birthday, Email, Address)
+VALUES (123, 'John Doe', 'Male', '1990-01-01', 'john.doe@example.com', '123 Main St');
+
+SET IDENTITY_INSERT MSTCUSTOMER OFF;
+
+
+
+
+
+
+
+
+
+
 Cannot insert explicit value for identity column in table 'MSTCUSTOMER' when IDENTITY_INSERT is set to OFF.
 
 
