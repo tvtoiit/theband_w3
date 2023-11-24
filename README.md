@@ -1,55 +1,45 @@
-package fjs.cs.action;
+Tiến hành check tuần tự từ dòng thứ 1 của data cho đến hết (hiển thị tất cả các dòng bị lỗi cùng lúc)																																																																													
+	Trường hợp CUSTOMER_ID của dòng đang check là khác empty và đang không tồn tại tại table MSTCUSTOMER (record có DELETE_YMD khác NULL xem là không tồn tại),																																																																												
+		thì tiến hành xuất ra message (alert) : "Line {0} : CUSTOMER_ID={1} is not existed", với {0} là index và {1} là trị CUSTOMER_ID của dòng đang check.																																																																											
+																																																																													
+	Trường hợp CUSTOMER_NAME của dòng đang check là empty,																																																																												
+		thì tiến hành xuất ra message (alert) : "Line {0} : CUSTOMER_NAME is empty", với {0} là index của dòng đang check.																																																																											
+																																																																													
+	Trường hợp CUSTOMER_NAME của dòng đang check vượt quá 50 ký tự																																																																												
+		thì tiến hành xuất ra message (alert) : "Line {0} : Value of CSUTOMER_NAME is more than 50 characters", với {0} là index của dòng đang check.																																																																											
+																																																																													
+	Trường hợp SEX của dòng đang check không hợp lệ (Giá trị hợp lệ: "Male" và "Female"),																																																																												
+		thì tiến hành xuất ra message (alert) : "Line {0} : SEX={1} is invalid", với {0} là index và {1} là trị SEX của dòng đang check.																																																																											
+																																																																													
+	Trường hợp BIRTHDAY của dòng đang check không có theo dang ngày YYYY/MM/DD và date input không hợp lệ																																																																												
+		thì tiến hành xuất ra message (alert) : "Line {0} : BIRTHDAY={1} is invalid", với {0} là index và {1} là trị BIRTHDAY của dòng đang check.																																																																											
+																																																																													
+	Trường hợp EMAIL của dòng đang check không phải là email address																																																																												
+		thì tiến hành xuất ra message (alert) : "Line {0} : EMAIL={1} is invalid", với {0} là index và {1} là trị EMAIL của dòng đang check.																																																																											
+																																																																													
+	Trường hợp EMAIL của dòng đang check vượt quá 40 ký tự																																																																												
+		thì tiến hành xuất ra message (alert) : "Line {0} : Value of EMAIL is more than 40 characters", với {0} là index của dòng đang check.																																																																											
+																																																																													
+	Trường hợp ADDRESS của dòng đang check vượt quá 256 ký tự																																																																												
+		thì tiến hành xuất ra message (alert) : "Line {0} : Value of ADDRESS is more than 256 characters", với {0} là index của dòng đang check.	
 
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
-import org.apache.struts.upload.FormFile;
-import org.springframework.web.struts.ActionSupport;
-
-import fjs.cs.common.Constants;
-import fjs.cs.form.ImportForm;
-import fjs.cs.model.MSTCUSTOMER;
-import fjs.cs.model.MSTUSER;
-import fjs.cs.service.ImportService;
 
 
 
-public class ImportAction extends ActionSupport {
-	@Override
-	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
-		String forward = Constants.FORWARD_FAILURE;
-		ImportForm importForm = (ImportForm) form;
-		HttpSession session = request.getSession(true);
-		
-		//Check if you are logged in, if not, proceed forward
-		MSTUSER userLoginSuccess = (MSTUSER) session.getAttribute("user");
-		if (userLoginSuccess != null) {
-			importForm.setUserLoginSuccess(userLoginSuccess.getUserName());
-		} else {
-			forward = Constants.FORWARD_LOGOUT;
-			return mapping.findForward(forward);
-		}
-		
-		ImportService importService = (ImportService) getWebApplicationContext().getBean(Constants.BEAN_IMPORT);
-		List<MSTCUSTOMER> listCustomer = importService.getAllCustomer();
-		
+
+
+
+  ---------------------------------------------------
+
+
+
+  public void checkDataInport(ImportForm importForm) throws FileNotFoundException, IOException {
 		FormFile file = importForm.getFile();
+		
 		if(file != null) {
 			String fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
             String[] lines = fileContent.split("\n");
-
+            List<MSTCUSTOMER> listCustomer = getAllCustomer();
             for (int i = 1; i < lines.length; i++) {
                 String line = lines[i];
                 String[] columns = line.split(",");
@@ -71,7 +61,7 @@ public class ImportAction extends ActionSupport {
                             
                             }
                         }
-                        request.setAttribute("messageError", listMessage);
+                        //request.setAttribute("messageError", listMessage);
                     }
                     
                     if (!customerError) {
@@ -140,11 +130,16 @@ public class ImportAction extends ActionSupport {
                     	}
                     }
                 }
-             }
+            }
 		}
-		return mapping.findForward(forward);
 	}
 	
+	/**
+	 * Check email address
+	 * 
+	 * @param email	Email needs checking
+	 * @return		Returns whether the Email is in the correct format or not
+	 */
 	private static boolean isValidEmail(String email) {
 	    //Check the basic format of the email
 	    String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
@@ -153,6 +148,12 @@ public class ImportAction extends ActionSupport {
 	    return email.matches(emailRegex);
 	}
 	
+	/**
+	 * Check birthday date
+	 * 
+	 * @param date The birthday date is checked and transmitted
+	 * @return 	   Returns whether the date is correct or not
+	 */
 	private static boolean isValidDate(LocalDate date) {
 	    try {
 	    	//Test the format again to check if the date is valid
@@ -162,10 +163,6 @@ public class ImportAction extends ActionSupport {
 	        return false;
 	    }
 	}
-}
-
-
-
 
 
 
