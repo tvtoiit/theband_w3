@@ -1,36 +1,249 @@
+public class Import extends Action {
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		mstcustomer t002Form = (mstcustomer) form;
+       
+		List<Integer> insertedLines = new ArrayList<>();
 
-情報: Tiles definition factory found for request processor ''.
-java.nio.file.AccessDeniedException: C:\error_file_6657ffc3-39d2-4f55-90ba-9bf67e5014d9.txt
+		// Tạo một List<Integer> để lưu index của các dòng được update
+		List<Integer> updatedLines = new ArrayList<>();
+        
+        FormFile file = t002Form.getFile();
+        
+        if (file != null) {
+            String fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
+            String[] lines = fileContent.split("\n");
+           
+            // Validate data and get error messages
+            List<String> errorMessages = validateData(lines);
+           
+         // If there are no errors, proceed to save/update
+            if (errorMessages.isEmpty()) {
+                T003DaoImp t003Dao = new T003DaoImp();
+
+                for (int i = 1; i < lines.length; i++) {
+                    String line = lines[i];
+                    String[] columns = line.split(",");
+
+                    if (columns.length >= 6) {
+                        String customerIdFromFile = columns[0].replace("\"", "").trim();
+
+                        if (customerIdFromFile.isEmpty()) {
+                            // Save data
+                            mstcustomer customer = createCustomerObjectFromLine(columns);
+                            int result = t003Dao.save(customer, BigDecimal.valueOf(1));
+                            insertedLines.add(i + 2);
+                        } else {
+                            // Update data
+                            mstcustomer customer = t003Dao.getCustomerById(Integer.parseInt(customerIdFromFile));
+                            mstcustomer customerUpdate = createCustomerObjectFromLine(columns);
+                            
+                            String customerNameFile = customerUpdate.getCustomerName();
+                            String customerSex = customerUpdate.getSex();
+                            String customerBirthDayFile = customerUpdate.getBirthDay();
+                            String customerEmailFile = customerUpdate.getEmail();
+                            
+                            if (!customerNameFile.equals(customer.getCustomerName())
+                                    || !customerSex.equals(customer.getSex())
+                                    || !customerBirthDayFile.equals(customer.getBirthDay())
+                                    || !customerEmailFile.equals(customer.getEmail())) {
+                                BigDecimal customerIdFormFile = new BigDecimal(customerIdFromFile);
+                               
+                                customerUpdate.setCustomerId(customerIdFormFile);
+                                t003Dao.update(customerUpdate);
+                                // Thêm index của dòng được update vào updatedLines
+                                updatedLines.add(i + 2);
+                            }
+                        }
+                    }
+                }
+                
+                Map<String, Object> importResult = new HashMap<>();
+                importResult.put("successMessage", "Customer data have been imported successfully");
+
+                importResult.put("insertedLines", insertedLines);
+                importResult.put("updatedLines", updatedLines);
+
+                String importMessage = buildImportMessage(importResult);
+
+                // In ra màn hình hoặc trả về client
+                System.out.println(importMessage);
+
+                
+            } else {
+                // Handle errors or display error messages to the user
+                for (String errorMessage : errorMessages) {
+                    System.out.println(errorMessage);
+                }
+            }
+        } 
+        
+		return mapping.findForward("T004");
+	}
+	
+	private static String buildImportMessage(Map<String, Object> importResult) {
+	    StringBuilder message = new StringBuilder(importResult.get("successMessage").toString());
+
+	    if (importResult.containsKey("insertedLines")) {
+	        message.append("\nInserted line(s): ");
+	        @SuppressWarnings("unchecked")
+			List<Integer> insertedLines = (List<Integer>) importResult.get("insertedLines");
+	        for (int i = 0; i < insertedLines.size(); i++) {
+	            message.append(insertedLines.get(i));
+	            if (i < insertedLines.size() - 1) {
+	                message.append(", ");
+	            }
+	        }
+	    }
+
+	    if (importResult.containsKey("updatedLines")) {
+	        message.append("\nUpdate line(s): ");
+	        @SuppressWarnings("unchecked")
+			List<Integer> updatedLines = (List<Integer>) importResult.get("updatedLines");
+	        for (int i = 0; i < updatedLines.size(); i++) {
+	            message.append(updatedLines.get(i));
+	            if (i < updatedLines.size() - 1) {
+	                message.append(", ");
+	            }
+	        }
+	    }
+
+	    return message.toString();
+	}
+
+
+	
+	
+	private List<String> validateData(String[] lines) {
+	    List<String> errorMessages = new ArrayList<>();
+	    T002DaoImp impT002 = new T002DaoImp();
+        List<mstcustomer> listCustomer = impT002.getData();
+	    for (int i = 1; i < lines.length; i++) {
+	        String line = lines[i];
+	        String[] columns = line.split(",");
+	        
+	        if (columns.length >= 6) {
+	            String customerIdFromFile = columns[0].replace("\"", "").trim();
+	            String customerNameFromFile = columns[1].replace("\"", "").trim();
+	            String customerSexFromFile = columns[2].replace("\"", "").trim();
+	            String customerBirthDayFromFile = columns[3].replace("\"", "").trim();
+	            String customerEmailFromFile = columns[4].replace("\"", "").trim();
+	            String customerAddressFromFile = columns[5].replace("\"", "").trim();
+
+	            if (!customerIdFromFile.isEmpty()) {
+                    boolean isCustomerExisted = false;
+                    for (mstcustomer customer : listCustomer) {
+                        String customerId = String.valueOf(customer.getCustomerId());
+
+                        // Kiểm tra CUSTOMER_ID trong table MSTCUSTOMER
+                        if (customerId.equals(customerIdFromFile) && customer.getDeleteYmd() == null) {
+                            isCustomerExisted = true;
+                            break;
+                        }
+                    }
+
+                    if (!isCustomerExisted) {
+                        // CUSTOMER_ID không tồn tại trong bảng MSTCUSTOMER
+                        errorMessages.add("Line " + (i + 2) + " : CUSTOMER_ID=" + customerIdFromFile + " is not existed");
+                    }
+                }
+
+                // Validate CUSTOMER_NAME length
+                if (customerNameFromFile.isEmpty()) {
+                    errorMessages.add("Line " + (i + 2) + " : CUSTOMER_NAME is empty");
+                } else if (customerNameFromFile.length() > 50) {
+                    errorMessages.add("Line " + (i + 2) + " : Value of CUSTOMER_NAME is more than 50 characters");
+                }
+
+                // Validate SEX validity
+                if (!"Male".equals(customerSexFromFile) && !"Female".equals(customerSexFromFile)) {
+                    errorMessages.add("Line " + (i + 2) + " : SEX=" + customerSexFromFile + " is invalid");
+                }
+
+                // Validate BIRTHDAY format and validity
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+                    LocalDate parsedDate = LocalDate.parse(customerBirthDayFromFile, formatter);
+
+                    if (!isValidDate(parsedDate)) {
+                        errorMessages.add("Line " + (i + 2) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
+                    }
+                } catch (DateTimeParseException e) {
+                    errorMessages.add("Line " + (i + 2) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
+                }
+
+                // Validate EMAIL format and length
+                if (!isValidEmail(customerEmailFromFile)) {
+                    errorMessages.add("Line " + (i + 2) + " : EMAIL=" + customerEmailFromFile + " is invalid");
+                } else if (customerEmailFromFile.length() > 40) {
+                    errorMessages.add("Line " + (i + 2) + " : Value of EMAIL is more than 40 characters");
+                }
+
+                // Validate ADDRESS length
+                if (customerAddressFromFile.length() > 256) {
+                    errorMessages.add("Line " + (i + 2) + " : Value of ADDRESS is more than 256 characters");
+                }
+	        }
+	    }
+
+	    return errorMessages;
+	}
+	
+	private mstcustomer createCustomerObjectFromLine(String[] columns) {
+	    // Assuming your mstcustomer class has a constructor that takes relevant parameters
+		mstcustomer customer = new mstcustomer();
+		//customer.setCustomerId(new BigDecimal(columns[0].replace("\"", "").trim()));
+		customer.setCustomerName(columns[1].replace("\"", "").trim());
+		String sex = columns[2].replace("\"", "").trim();
+		if ("Male".equals(sex)) {
+	        customer.setSex("1");
+	    } else if ("Female".equals(sex)) {
+	        customer.setSex("0");
+	    } else {
+	        // Handle the case where the sex is neither Male nor Female
+	        customer.setSex(sex); // You may choose to set it as is or handle differently
+	    }
+		
+		customer.setBirthDay(columns[3].replace("\"", "").trim());
+		customer.setEmail(columns[4].replace("\"", "").trim());
+		customer.setAddress(columns[5].replace("\"", "").trim());
+
+	    return customer;
+	}
 
 
 
+	/**
+	 * Check email address
+	 * 
+	 * @param email	Email needs checking
+	 * @return		Returns whether the Email is in the correct format or not
+	 */
+	private static boolean isValidEmail(String email) {
+	    //Check the basic format of the email
+	    String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
 
+	    //Check email format by regex matching
+	    return email.matches(emailRegex);
+	}
+	
+	/**
+	 * Check birthday date
+	 * 
+	 * @param date The birthday date is checked and transmitted
+	 * @return 	   Returns whether the date is correct or not
+	 */
+	private static boolean isValidDate(LocalDate date) {
+	    try {
+	    	//Test the format again to check if the date is valid
+	        LocalDate.parse(date.toString());
+	        return true;
+	    } catch (DateTimeParseException e) {
+	        return false;
+	    }
+	}
 
-
-
-
-
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.UUID;
-
-public String saveErrorFile(List<String> errorMessages) {
-    try {
-        // Tạo tên tệp ngẫu nhiên
-        String fileName = "error_file_" + UUID.randomUUID() + ".txt";
-        Path filePath = Path.of(fileName);
-
-        // Ghi danh sách lỗi vào tệp
-        Files.write(filePath, errorMessages, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-
-        // Trả về đường dẫn tới tệp để người dùng có thể tải xuống
-        return filePath.toString();
-    } catch (IOException e) {
-        e.printStackTrace(); // Xử lý lỗi tùy ý
-        return null;
-    }
 }
 
 
@@ -42,32 +255,56 @@ public String saveErrorFile(List<String> errorMessages) {
 
 
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
-public void downloadErrorFile(List<String> errorMessages) {
-    try {
-        // Tạo tên tệp ngẫu nhiên
-        String fileName = "error_file_" + System.currentTimeMillis() + ".txt";
-        Path filePath = Path.of(fileName);
 
-        // Ghi danh sách lỗi vào tệp
-        Files.write(filePath, errorMessages, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
 
-        // Gửi tệp về client để tải xuống
-        HttpServletResponse response = getServletResponse(); // Đảm bảo bạn có đối tượng HttpServletResponse
-        response.setContentType("text/plain");
-        response.setHeader("Content-disposition", "attachment; filename=" + fileName);
 
-        // Đọc từ tệp và ghi vào đầu ra
-        Files.copy(filePath, response.getOutputStream());
 
-        // Xóa tệp sau khi tải về xong (tuỳ chọn)
-        Files.deleteIfExists(filePath);
-    } catch (IOException e) {
-        e.printStackTrace(); // Xử lý lỗi tùy ý
+
+
+
+
+
+-----------------------
+
+/**
+ * Creates a mstcustomer object from a line of CSV data.
+ * 
+ * @param columns An array of strings representing the CSV columns for a single data entry.
+ * @return A mstcustomer object populated with data from the CSV line.
+ */
+private mstcustomer createCustomerObjectFromLine(String[] columns) {
+    // Create a new instance of mstcustomer
+    mstcustomer customer = new mstcustomer();
+
+    // Set CustomerId, removing surrounding quotes and trimming spaces
+    customer.setCustomerId(new BigDecimal(columns[0].replace("\"", "").trim()));
+
+    // Set CustomerName, removing surrounding quotes and trimming spaces
+    customer.setCustomerName(columns[1].replace("\"", "").trim());
+
+    // Set Sex based on the value in the CSV, converting "Male" to "1" and "Female" to "0"
+    String sex = columns[2].replace("\"", "").trim();
+    if ("Male".equals(sex)) {
+        customer.setSex("1");
+    } else if ("Female".equals(sex)) {
+        customer.setSex("0");
+    } else {
+        // Handle the case where the sex is neither Male nor Female
+        customer.setSex(sex); // You may choose to set it as is or handle differently
     }
+
+    // Set BirthDay, removing surrounding quotes and trimming spaces
+    customer.setBirthDay(columns[3].replace("\"", "").trim());
+
+    // Set Email, removing surrounding quotes and trimming spaces
+    customer.setEmail(columns[4].replace("\"", "").trim());
+
+    // Set Address, removing surrounding quotes and trimming spaces
+    customer.setAddress(columns[5].replace("\"", "").trim());
+
+    // Return the populated mstcustomer object
+    return customer;
 }
 
 
@@ -78,7 +315,17 @@ public void downloadErrorFile(List<String> errorMessages) {
 
 
 
-<html:file styleId="fileInput" property="file" style="display: none;" />
+
+
+
+
+
+
+
+
+
+
+
 
 
 
