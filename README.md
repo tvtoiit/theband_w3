@@ -1,3 +1,176 @@
+ <servlet-mapping>
+        <servlet-name>action</servlet-name>
+        <url-pattern>*.do</url-pattern> <!-- Điều này có thể thay đổi tùy theo URL pattern của bạn -->
+    </servlet-mapping>
+   <context-param>
+	    <param-name>errorsFolderPath</param-name>
+	    <param-value>C:\\custom-errors</param-value>
+	</context-param>
+
+
+
+ @Override
+	public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+	    ActionErrors errors = new ActionErrors();
+
+	    if (file != null) {
+	        String fileContent;
+	        try {
+	            fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
+	            String[] lines = fileContent.split("\n");
+
+	            T002DaoImp impT002 = new T002DaoImp();
+	            List<mstcustomer> listCustomer = impT002.getData();
+
+	            for (int i = 1; i < lines.length; i++) {
+	                String line = lines[i];
+	                String[] columns = line.split(",");
+
+	                if (columns.length >= 6) {
+	                    String customerIdFromFile = columns[0].replace("\"", "").trim();
+	                    String customerNameFromFile = columns[1].replace("\"", "").trim();
+
+	                    // Check CUSTOMER_ID existence
+	                    if (!customerIdFromFile.isEmpty()) {
+	                        boolean isCustomerExisted = false;
+	                        for (mstcustomer customer : listCustomer) {
+	                            String customerId = String.valueOf(customer.getCustomerId());
+
+	                            if (customerId.equals(customerIdFromFile) && customer.getDeleteYmd() == null) {
+	                                isCustomerExisted = true;
+	                                break;
+	                            }
+	                        }
+
+	                        if (!isCustomerExisted) {
+	                            String errorMessageID = MessageFormat.format("Line {0} : CUSTOMER_ID={1} is not existed", i + 1, customerIdFromFile);
+	                            errors.add("", new ActionMessage(errorMessageID));
+	                        }
+	                    }
+
+	                    // Validate CUSTOMER_NAME length
+	                    if (customerNameFromFile.isEmpty()) {
+	                        String messageName = MessageFormat.format("Line {0} : CUSTOMER_NAME={1} is empty", i + 1, customerNameFromFile);
+	                        errors.add("", new ActionMessage(messageName));
+	                    } else if (customerNameFromFile.length() > 50) {
+	                        String messageNameLength = MessageFormat.format("Line {0} : Value of CUSTOMER_NAME is more than 50 characters", i + 1);
+	                        errors.add("", new ActionMessage(messageNameLength));
+	                    }
+	                }
+	            }
+	            if (errors != null) {
+	            	saveErrorFile(errors, request);
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	    return errors;
+	}
+	
+	
+	public String saveErrorFile(ActionErrors errors, HttpServletRequest request) {
+	    try {
+	        // Write file path
+	        String baseFolder = "C:\\";
+	        String errorsFolder = "errors";
+	        String driveName = Paths.get(baseFolder, errorsFolder).toString();
+
+	        // Try to get the errorsFolderPath from web.xml
+	        ServletContext servletContext = request.getServletContext();
+	        String webXmlErrorsFolderPath = servletContext.getInitParameter("errorsFolderPath");
+	        if (webXmlErrorsFolderPath != null && !webXmlErrorsFolderPath.isEmpty()) {
+	            driveName = webXmlErrorsFolderPath;
+	        }
+
+	        // Convert time to "yyyyMMdd" format
+	        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+	        String formattedDate = dateFormat.format(new Date());
+
+	        // Create a new filename
+	        String fileName = "error_file_" + formattedDate + ".txt";
+	        Path filePath = Paths.get(driveName, fileName);
+
+	        // Create the "errors" folder if it doesn't exist
+	        Path errorsFolderPath = Paths.get(driveName);
+	        if (!Files.exists(errorsFolderPath)) {
+	            Files.createDirectories(errorsFolderPath);
+	        }
+
+	        // Iterate over ActionMessages and write them to the file
+	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath.toString()))) {
+	            @SuppressWarnings("unchecked")
+	            Iterator<ActionMessage> iterator = errors.get();
+	            while (iterator.hasNext()) {
+	                ActionMessage error = iterator.next();
+	                String errorMessage = error.getKey();
+	                writer.write(errorMessage);
+	                writer.newLine();
+	            }
+	        }
+
+	        return filePath.toString();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+
+
+
+ -----------Action
+private ServletContext servletContext;
+
+    public void setServlet(ActionServlet actionServlet) {
+        super.setServlet(actionServlet);
+        servletContext = actionServlet.getServletContext();
+        if (servletContext == null) {
+            throw new RuntimeException("ServletContext is null. Make sure setServlet method is called.");
+        }
+    }
+
+
+
+    ServletContext servletContext = request.getServletContext();
+		
+		System.out.println(servletContext);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
 	    ActionErrors errors = new ActionErrors();
 
@@ -522,7 +695,7 @@ public class ImportService {
 
 
 path errorFolderPath
- à em sẽ lấy từ config ở web.xml á
+ là em sẽ lấy từ config ở web.xml á
  hoặc nếu cho người dùng setting
  thì sẽ là application.properties
  
