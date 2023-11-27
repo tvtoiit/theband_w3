@@ -82,7 +82,14 @@ public class Import extends Action {
 		return mapping.findForward("T004");
 	}
 	
-	private static String buildImportMessage(Map<String, Object> importResult) {
+	/**
+     * Builds an import message based on the import result.
+     *
+     * @param importResult The import result containing success message, inserted lines, and updated lines.
+     * @return A formatted import message.
+     */
+	private String buildImportMessage(Map<String, Object> importResult) {
+		// Create a StringBuilder to build the message
 	    StringBuilder message = new StringBuilder(importResult.get("successMessage").toString());
 
 	    if (importResult.containsKey("insertedLines")) {
