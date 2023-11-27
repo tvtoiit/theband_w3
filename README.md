@@ -1,3 +1,11 @@
+path errorFolderPath
+ à em sẽ lấy từ config ở web.xml á
+ hoặc nếu cho người dùng setting
+ thì sẽ là application.properties
+ 
+ 
+ 
+ 
  public String saveErrorFile(List<String> errorMessages) {
         try {
             // Write file path
