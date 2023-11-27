@@ -1,3 +1,49 @@
+ public String saveErrorFile(List<String> errorMessages) {
+        try {
+            // Write file path
+            String baseFolder = "C:\\";
+            String errorsFolder = "errors";
+            String driveName = Paths.get(baseFolder, errorsFolder).toString();
+
+            // Create the "errors" folder if it doesn't exist
+            Path errorsFolderPath = Paths.get(driveName);
+            if (!Files.exists(errorsFolderPath)) {
+                Files.createDirectories(errorsFolderPath);
+            }
+
+            // Convert time to "yyyyMMdd" format
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+            String formattedDate = dateFormat.format(new Date());
+
+            // Create a new filename
+            String fileName = "error_file_" + formattedDate + ".txt";
+            Path filePath = Paths.get(driveName, fileName);
+
+            Files.write(filePath, errorMessages, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+
+            return filePath.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public class ImportForm extends ActionForm{
 	private static final long serialVersionUID = 1L;
 	private FormFile file;
