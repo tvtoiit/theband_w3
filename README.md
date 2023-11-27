@@ -1,61 +1,128 @@
-public class ImportForm extends ActionForm{
-	private static final long serialVersionUID = 1L;
-	private FormFile file;
-	private String sMode;
-	private String userLoginSuccess;
-	private List<String> messageErrors;
-	private String importText;
-	private String messagePath;
+import java.util.List;
 
-	public String getsMode() {
-		return sMode;
-	}
+/**
+ * This class represents a form used for importing files in a Struts application.
+ * It extends ActionForm for integration with the Struts framework.
+ */
+public class ImportForm extends ActionForm {
 
-	public void setsMode(String sMode) {
-		this.sMode = sMode;
-	}
+    private static final long serialVersionUID = 1L;
 
-	public String getMessagePath() {
-		return messagePath;
-	}
+    // Represents a file that can be uploaded.
+    private FormFile file;
 
-	public void setMessagePath(String messagePath) {
-		this.messagePath = messagePath;
-	}
+    // Represents the mode for import.
+    private String sMode;
 
-	public String getImportText() {
-		return importText;
-	}
+    // Represents the user login success information.
+    private String userLoginSuccess;
 
-	public void setImportText(String importText) {
-		this.importText = importText;
-	}
+    // List to store error messages during import.
+    private List<String> messageErrors;
 
-	public List<String> getMessageErrors() {
-		return messageErrors;
-	}
+    // Represents additional import text information.
+    private String importText;
 
-	public void setMessageErrors(List<String> messageErrors) {
-		this.messageErrors = messageErrors;
-	}
+    // Represents the message path.
+    private String messagePath;
 
-	public String getUserLoginSuccess() {
-		return userLoginSuccess;
-	}
+    /**
+     * Gets the import mode.
+     * @return The import mode as a string.
+     */
+    public String getsMode() {
+        return sMode;
+    }
 
-	public void setUserLoginSuccess(String userLoginSuccess) {
-		this.userLoginSuccess = userLoginSuccess;
-	}
+    /**
+     * Sets the import mode.
+     * @param sMode The import mode to be set.
+     */
+    public void setsMode(String sMode) {
+        this.sMode = sMode;
+    }
 
-	public FormFile getFile() {
-		return file;
-	}
-	
-	public void setFile(FormFile file) {
-		this.file = file;
-	}
+    /**
+     * Gets the message path.
+     * @return The message path as a string.
+     */
+    public String getMessagePath() {
+        return messagePath;
+    }
 
+    /**
+     * Sets the message path.
+     * @param messagePath The message path to be set.
+     */
+    public void setMessagePath(String messagePath) {
+        this.messagePath = messagePath;
+    }
+
+    /**
+     * Gets the additional import text information.
+     * @return The import text as a string.
+     */
+    public String getImportText() {
+        return importText;
+    }
+
+    /**
+     * Sets additional import text information.
+     * @param importText The import text to be set.
+     */
+    public void setImportText(String importText) {
+        this.importText = importText;
+    }
+
+    /**
+     * Gets the list of error messages during import.
+     * @return List of error messages.
+     */
+    public List<String> getMessageErrors() {
+        return messageErrors;
+    }
+
+    /**
+     * Sets the list of error messages during import.
+     * @param messageErrors List of error messages to be set.
+     */
+    public void setMessageErrors(List<String> messageErrors) {
+        this.messageErrors = messageErrors;
+    }
+
+    /**
+     * Gets the user login success information.
+     * @return User login success information as a string.
+     */
+    public String getUserLoginSuccess() {
+        return userLoginSuccess;
+    }
+
+    /**
+     * Sets the user login success information.
+     * @param userLoginSuccess User login success information to be set.
+     */
+    public void setUserLoginSuccess(String userLoginSuccess) {
+        this.userLoginSuccess = userLoginSuccess;
+    }
+
+    /**
+     * Gets the file to be imported.
+     * @return The FormFile representing the file to be imported.
+     */
+    public FormFile getFile() {
+        return file;
+    }
+
+    /**
+     * Sets the file to be imported.
+     * @param file The FormFile representing the file to be imported.
+     */
+    public void setFile(FormFile file) {
+        this.file = file;
+    }
 }
+
 
 
 
