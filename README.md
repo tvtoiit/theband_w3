@@ -1,3 +1,77 @@
+public class ImportForm extends ActionForm{
+	private static final long serialVersionUID = 1L;
+	private FormFile file;
+	private String sMode;
+	private String userLoginSuccess;
+	private List<String> messageErrors;
+	private String importText;
+	private String messagePath;
+
+	public String getsMode() {
+		return sMode;
+	}
+
+	public void setsMode(String sMode) {
+		this.sMode = sMode;
+	}
+
+	public String getMessagePath() {
+		return messagePath;
+	}
+
+	public void setMessagePath(String messagePath) {
+		this.messagePath = messagePath;
+	}
+
+	public String getImportText() {
+		return importText;
+	}
+
+	public void setImportText(String importText) {
+		this.importText = importText;
+	}
+
+	public List<String> getMessageErrors() {
+		return messageErrors;
+	}
+
+	public void setMessageErrors(List<String> messageErrors) {
+		this.messageErrors = messageErrors;
+	}
+
+	public String getUserLoginSuccess() {
+		return userLoginSuccess;
+	}
+
+	public void setUserLoginSuccess(String userLoginSuccess) {
+		this.userLoginSuccess = userLoginSuccess;
+	}
+
+	public FormFile getFile() {
+		return file;
+	}
+	
+	public void setFile(FormFile file) {
+		this.file = file;
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public class Import extends Action {
 	@Override
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
