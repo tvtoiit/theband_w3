@@ -1,3 +1,126 @@
+public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+	    ActionErrors errors = new ActionErrors();
+
+	    if (file != null) {
+	        String fileContent;
+	        try {
+	            fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
+	            String[] lines = fileContent.split("\n");
+
+	            T002DaoImp impT002 = new T002DaoImp();
+	            List<mstcustomer> listCustomer = impT002.getData();
+
+	            for (int i = 1; i < lines.length; i++) {
+	                String line = lines[i];
+	                String[] columns = line.split(",");
+
+	                if (columns.length >= 6) {
+	                    String customerIdFromFile = columns[0].replace("\"", "").trim();
+	                    String customerNameFromFile = columns[1].replace("\"", "").trim();
+
+	                    // Check CUSTOMER_ID existence
+	                    if (!customerIdFromFile.isEmpty()) {
+	                        boolean isCustomerExisted = false;
+	                        for (mstcustomer customer : listCustomer) {
+	                            String customerId = String.valueOf(customer.getCustomerId());
+
+	                            if (customerId.equals(customerIdFromFile) && customer.getDeleteYmd() == null) {
+	                                isCustomerExisted = true;
+	                                break;
+	                            }
+	                        }
+
+	                        if (!isCustomerExisted) {
+	                            String errorMessageID = MessageFormat.format("Line {0} : CUSTOMER_ID={1} is not existed", i + 1, customerIdFromFile);
+	                            errors.add("", new ActionMessage(errorMessageID));
+	                        }
+	                    }
+
+	                    // Validate CUSTOMER_NAME length
+	                    if (customerNameFromFile.isEmpty()) {
+	                        String messageName = MessageFormat.format("Line {0} : CUSTOMER_NAME={1} is empty", i + 1, customerNameFromFile);
+	                        errors.add("", new ActionMessage(messageName));
+	                    } else if (customerNameFromFile.length() > 50) {
+	                        String messageNameLength = MessageFormat.format("Line {0} : Value of CUSTOMER_NAME is more than 50 characters", i + 1);
+	                        errors.add("", new ActionMessage(messageNameLength));
+	                    }
+	                }
+	            }
+	            if (errors != null) {
+	            	saveErrorFile(errors);
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	    return errors;
+	}
+	
+	
+	public String saveErrorFile(ActionErrors errors) {
+	    try {
+	        // Write file path
+	        String baseFolder = "C:\\";
+	        String errorsFolder = "errors";
+	        String driveName = Paths.get(baseFolder, errorsFolder).toString();
+
+	        // Create the "errors" folder if it doesn't exist
+	        Path errorsFolderPath = Paths.get(driveName);
+	        if (!Files.exists(errorsFolderPath)) {
+	            Files.createDirectories(errorsFolderPath);
+	        }
+
+	        // Convert time to "yyyyMMdd" format
+	        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+	        String formattedDate = dateFormat.format(new Date());
+
+	        // Create a new filename
+	        String fileName = "error_file_" + formattedDate + ".txt";
+	        Path filePath = Paths.get(driveName, fileName);
+
+	        // Iterate over ActionMessages and write them to the file
+	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath.toString()))) {
+	            @SuppressWarnings("unchecked")
+				Iterator<ActionMessage> iterator = errors.get();
+	            while (iterator.hasNext()) {
+	                ActionMessage error = iterator.next();
+	                String errorMessage = error.getKey();
+	                writer.write(errorMessage);
+	                writer.newLine();
+	            }
+	        }
+
+	        return filePath.toString();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
 * Copyright(c) Fujinet Co., Ltd.
 * All rights reserved. 
@@ -66,7 +189,7 @@ public class ImportService {
 	 * 
 	 * @param importForm				Contains file import data
 	 * @throws FileNotFoundException	Throws get file exception
-	 * @throws IOException				If any exception occurs during the execution of the method.
+	 * @throws IOException			If any exception occurs during the execution of the method.
 	 */
 	public void handleImport(ImportForm importForm) throws FileNotFoundException, IOException {
 		//Create a List<Integer> to store the index of inserted rows
