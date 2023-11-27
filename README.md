@@ -1,3 +1,121 @@
+public class ImportForm extends ActionForm{
+	private static final long serialVersionUID = 1L;
+	private FormFile file;
+	private String sMode;
+	private String userLoginSuccess;
+	private List<String> messageErrors;
+	private String importText;
+	private String messagePath;
+
+	 /**
+     * Gets the import mode.
+     * @return The import mode as a string.
+     */
+    public String getsMode() {
+        return sMode;
+    }
+
+    /**
+     * Sets the import mode.
+     * @param sMode The import mode to be set.
+     */
+    public void setsMode(String sMode) {
+        this.sMode = sMode;
+    }
+
+    /**
+     * Gets the message path.
+     * @return The message path as a string.
+     */
+    public String getMessagePath() {
+        return messagePath;
+    }
+
+    /**
+     * Sets the message path.
+     * @param messagePath The message path to be set.
+     */
+    public void setMessagePath(String messagePath) {
+        this.messagePath = messagePath;
+    }
+
+    /**
+     * Gets the additional import text information.
+     * @return The import text as a string.
+     */
+    public String getImportText() {
+        return importText;
+    }
+
+    /**
+     * Sets additional import text information.
+     * @param importText The import text to be set.
+     */
+    public void setImportText(String importText) {
+        this.importText = importText;
+    }
+
+    /**
+     * Gets the list of error messages during import.
+     * @return List of error messages.
+     */
+    public List<String> getMessageErrors() {
+        return messageErrors;
+    }
+
+    /**
+     * Sets the list of error messages during import.
+     * @param messageErrors List of error messages to be set.
+     */
+    public void setMessageErrors(List<String> messageErrors) {
+        this.messageErrors = messageErrors;
+    }
+
+    /**
+     * Gets the user login success information.
+     * @return User login success information as a string.
+     */
+    public String getUserLoginSuccess() {
+        return userLoginSuccess;
+    }
+
+    /**
+     * Sets the user login success information.
+     * @param userLoginSuccess User login success information to be set.
+     */
+    public void setUserLoginSuccess(String userLoginSuccess) {
+        this.userLoginSuccess = userLoginSuccess;
+    }
+
+    /**
+     * Gets the file to be imported.
+     * @return The FormFile representing the file to be imported.
+     */
+    public FormFile getFile() {
+        return file;
+    }
+
+    /**
+     * Sets the file to be imported.
+     * @param file The FormFile representing the file to be imported.
+     */
+    public void setFile(FormFile file) {
+        this.file = file;
+    }
+    
+    @Override
+    public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+    	
+    	
+    	
+    	return super.validate(mapping, request);
+    }
+
+}
+
+
+
+
 private List<String> validateData(String[] lines) {
 	    List<String> errorMessages = new ArrayList<>();
 	    for (int i = 1; i < lines.length; i++) {
