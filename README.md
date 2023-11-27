@@ -1,3 +1,89 @@
+Line {0} : BIRTHDAY = {1} is invalid
+
+AcctionMessage anh nhớ nó cũng có hỗ trợ đục lỗ
+
+private List<String> validateData(String[] lines) {
+	    List<String> errorMessages = new ArrayList<>();
+	    for (int i = 1; i < lines.length; i++) {
+	        String line = lines[i];
+	        String[] columns = line.split(",");
+	        List<MSTCUSTOMER> listCustomer = getAllCustomer();
+	        
+	        if (columns.length >= 6) {
+	            String customerIdFromFile = columns[0].replace("\"", "").trim();
+	            String customerNameFromFile = columns[1].replace("\"", "").trim();
+	            String customerSexFromFile = columns[2].replace("\"", "").trim();
+	            String customerBirthDayFromFile = columns[3].replace("\"", "").trim();
+	            String customerEmailFromFile = columns[4].replace("\"", "").trim();
+	            String customerAddressFromFile = columns[5].replace("\"", "").trim();
+
+	            if (!customerIdFromFile.isEmpty()) {
+                    boolean isCustomerExisted = false;
+                    for (MSTCUSTOMER customer : listCustomer) {
+                        String customerId = String.valueOf(customer.getCustomerId());
+
+                        //Check the CUSTOMER_ID in the MSTCUSTOMER table
+                        if (customerId.equals(customerIdFromFile) && customer.getDeleteYMD() == null) {
+                            isCustomerExisted = true;
+                            break;
+                        }
+                    }
+
+                    if (!isCustomerExisted) {
+                        // CUSTOMER_ID does not exist in the MSTCUSTOMER table
+                        errorMessages.add("Line " + (i + 1) + " : CUSTOMER_ID=" + customerIdFromFile + " is not existed");
+                    }
+                }
+
+                // Validate CUSTOMER_NAME length
+                if (customerNameFromFile.isEmpty()) {
+                    errorMessages.add("Line " + (i + 1) + " : CUSTOMER_NAME is empty");
+                } else if (customerNameFromFile.length() > 50) {
+                    errorMessages.add("Line " + (i + 1) + " : Value of CUSTOMER_NAME is more than 50 characters");
+                }
+
+                // Validate SEX validity
+                if (!"Male".equals(customerSexFromFile) && !"Female".equals(customerSexFromFile)) {
+                    errorMessages.add("Line " + (i + 1) + " : SEX=" + customerSexFromFile + " is invalid");
+                }
+
+                // Validate BIRTHDAY format and validity
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+                    LocalDate parsedDate = LocalDate.parse(customerBirthDayFromFile, formatter);
+
+                    if (!isValidDate(parsedDate)) {
+                        errorMessages.add("Line " + (i + 1) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
+                    }
+                } catch (DateTimeParseException e) {
+                    errorMessages.add("Line " + (i + 1) + " : BIRTHDAY=" + customerBirthDayFromFile + " is invalid");
+                }
+
+                // Validate EMAIL format and length
+                if (!isValidEmail(customerEmailFromFile)) {
+                    errorMessages.add("Line " + (i + 1) + " : EMAIL=" + customerEmailFromFile + " is invalid");
+                } else if (customerEmailFromFile.length() > 40) {
+                    errorMessages.add("Line " + (i + 1) + " : Value of EMAIL is more than 40 characters");
+                }
+
+                // Validate ADDRESS length
+                if (customerAddressFromFile.length() > 256) {
+                    errorMessages.add("Line " + (i + 1) + " : Value of ADDRESS is more than 256 characters");
+                }
+	        }
+	    }
+	    return errorMessages;
+	}
+
+
+
+
+
+
+
+
+
+
 /**
 	 * Record errorMessage to file
 	 * 
