@@ -1,3 +1,479 @@
+/**
+* Copyright(c) Fujinet Co., Ltd.
+* All rights reserved. 
+* 
+* @(#)ImportService.java 01-00 2023/11/27
+* 
+* Version 1.00
+* Last_Update 2023/11/27
+*/
+package fjs.cs.service;
+
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.apache.struts.upload.FormFile;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
+
+import fjs.cs.common.Constants;
+import fjs.cs.dao.CustomerDao;
+import fjs.cs.form.ImportForm;
+import fjs.cs.model.MSTCUSTOMER;
+
+/**
+ * The class handles importing files
+ * 
+ * @version 1.00
+ * @since 1.00
+ * @author toi-tv
+ */
+public class ImportService {
+	private CustomerDao customerDao;
+	
+	private PropertyPlaceholderConfigurer prop;
+	
+	/**
+	 * 
+	 * @param prop
+	 */
+	public void setProp(PropertyPlaceholderConfigurer prop) {
+		this.prop = prop;
+	}
+
+	/**
+	 * Set new value customerDao
+	 * 
+	 * @param customerDao	New customerDao value
+	 */
+	public void setCustomerDao(CustomerDao customerDao) {
+		this.customerDao = customerDao;
+	}
+	
+	/**
+	 * Get all customers in the mstCustomer table.
+	 * 
+	 * @return	List all customers.
+	 */
+	public List<MSTCUSTOMER> getAllCustomer() {
+		List<MSTCUSTOMER> customers = customerDao.getCustomerCheckImport();
+		return customers;
+	} 
+	
+	/**
+	 * This function performs file import, adding and editing lines in the file
+	 * 
+	 * @param importForm				Contains file import data
+	 * @throws FileNotFoundException	Throws get file exception
+	 * @throws IOException				If any exception occurs during the execution of the method.
+	 */
+	public void handleImport(ImportForm importForm, HttpServletRequest request) throws FileNotFoundException, IOException {
+		//Create a List<Integer> to store the index of inserted rows
+		List<Integer> insertedLines = new ArrayList<>();
+
+		// Create a List<Integer> to store the index of updated lines
+		List<Integer> updatedLines = new ArrayList<>();
+		FormFile file = importForm.getFile();
+		if (file != null) {
+			String fileContent = new String(file.getFileData(), StandardCharsets.UTF_8);
+            String[] lines = fileContent.split("\n");
+           
+            // Validate data and get error messages
+            ActionMessages errorMessages = validateData(lines);
+            
+            //If there are no errors, perform update and insert
+            if (errorMessages.isEmpty()) {
+            	for (int i = 1; i < lines.length; i++) {
+                    String line = lines[i];
+                    String[] columns = line.split(",");
+
+                    if (columns.length >= 6) {
+                    	
+                    	//Get customerId from the file and remove spaces and ""
+                        String customerIdFromFile = columns[0].replace("\"", "").trim();
+
+                        //If customerId is empty, perform insert
+                        if (customerIdFromFile.isEmpty()) {
+                            // Save data
+                            MSTCUSTOMER customer = createCustomerObjectFromLine(columns);
+                            customerDao.insertCustomer(customer);
+                            
+                         // Add index of updated lines to inserted rows
+                            insertedLines.add(i + 1);
+                        } else {
+                        	MSTCUSTOMER customer = new MSTCUSTOMER();
+                            // Update data
+                        	customer.setCustomerId(Integer.parseInt(customerIdFromFile));
+                        	customer = customerDao.getCustomerById(customer);
+                        	MSTCUSTOMER customerUpdate = createCustomerObjectFromLine(columns);
+                            
+                        	//get the name, sex, birthday, email values ​​to check if there are any changes in the MSTCUSTOMER table
+                            String customerNameFile = customerUpdate.getCustomerName();
+                            String customerSex = customerUpdate.getSex();
+                            String customerBirthDayFile = customerUpdate.getBirthDay();
+                            String customerEmailFile = customerUpdate.getEmail();
+                            
+                            //Check if name, sex, birthday, email are different, then update the record in the CUSTOMER table
+                            if (!customerNameFile.equals(customer.getCustomerName())
+                                    || !customerSex.equals(customer.getSex())
+                                    || !customerBirthDayFile.equals(customer.getBirthDay())
+                                    || !customerEmailFile.equals(customer.getEmail())) {
+                            	
+                                customerUpdate.setCustomerId(Integer.parseInt(customerIdFromFile));
+                                
+                                //Handle update customerUpdate file
+                                customerDao.updateCustomers(customerUpdate);
+                                
+                                // Add index of updated lines to updatedLines
+                                updatedLines.add(i + 1);
+                            }
+                        }
+                    }
+                }
+            	//Perform file writing when import is successful
+            	saveMessageFile(insertedLines, updatedLines, importForm);
+            } else {
+            	//In addition, if errorMessages exists, write it to the error file
+            	String filePath = saveErrorFile(errorMessages);
+            	importForm.setFolderPathError(filePath);
+            }
+		}
+	}
+	
+	/**
+	 * Save the success message file
+	 * 
+	 * @param insertedLines		Create a List<Integer> to store the index of inserted rows
+	 * @param updatedLines		Create a List<Integer> to store the index of updated lines
+	 * @param importForm		Form data import client
+	 */
+	public void saveMessageFile(List<Integer> insertedLines, List<Integer> updatedLines, ImportForm importForm) {
+		Map<String, Object> importResult = new HashMap<>();
+        importResult.put("successMessage", "Customer data have been imported successfully");
+
+        importResult.put("insertedLines", insertedLines);
+        importResult.put("updatedLines", updatedLines);
+
+        String importMessageSuccess = buildImportMessage(importResult);
+        String filePath = saveMessageImportFileSuccess(importMessageSuccess);
+        importForm.setFolderPathSuccess(filePath);
+	}
+	
+	/**
+	 * Record errorMessage to file
+	 * 
+	 * @param errorMessages	List of errors errorMessages
+	 * @return	A file has errors
+	 */
+	public String saveErrorFile(ActionMessages errors) {
+	    try {
+	        // Write file path
+	    	String baseFolder ="C:\\";
+			String errorsFolder = "ErrorFileImport";
+	        String driveName = Paths.get(baseFolder, errorsFolder).toString();
+	        
+	        // Convert time to "yyyyMMdd" format
+	        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+	        String formattedDate = dateFormat.format(new Date());
+
+	        // Create a new filename
+	        String fileName = "error_file_" + formattedDate + ".txt";
+	        Path filePath = Paths.get(driveName, fileName);
+
+	        // Create the "errors" folder if it doesn't exist
+	        Path errorsFolderPath = Paths.get(driveName);
+	        if (!Files.exists(errorsFolderPath)) {
+	            Files.createDirectories(errorsFolderPath);
+	        }
+
+	        // Iterate over ActionMessages and write them to the file
+	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath.toString()))) {
+	            @SuppressWarnings("unchecked")
+	            Iterator<ActionMessage> iterator = errors.get();
+	            while (iterator.hasNext()) {
+	                ActionMessage error = iterator.next();
+	                String errorMessage = error.getKey();
+	                writer.write(errorMessage);
+	                writer.newLine();
+	            }
+	        }
+	        return filePath.toString();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+	
+	/**
+	 * Write down the success message file recording information
+	 * 
+	 * @param importMessageSuccess
+	 * @return
+	 */
+	public String saveMessageImportFileSuccess(String importMessageSuccess) {
+	    try {
+	    	//write file path
+	    	String baseFolder ="C:\\";
+	    	String successFolder = "SuccessFileImport";
+	    	String driveName = Paths.get(baseFolder, successFolder).toString();
+	    	
+	    	// Convert time to "yyyyMMdd" format
+	    	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+	    	String formattedDate = dateFormat.format(new Date());
+	        
+	    	// Create a new filename
+	    	String fileName = "success_file_" +formattedDate+ ".txt";
+	        Path filePath = Paths.get(driveName, fileName);
+	        
+	        // Create the "errors" folder if it doesn't exist
+	        Path errorsFolderPath = Paths.get(driveName);
+	        if (!Files.exists(errorsFolderPath)) {
+	            Files.createDirectories(errorsFolderPath);
+	        }
+	        
+	        Files.write(filePath, importMessageSuccess.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+
+	        return filePath.toString();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+	
+	/**
+	 * Get 1 column in the file, remove the ""
+	 * 
+	 * @param columns Checking the column
+	 * @return		  Returns 1 column with "" removed
+	 */
+	private MSTCUSTOMER createCustomerObjectFromLine(String[] columns) {
+	    // Assuming your MSTCUSTOMER class has a constructor that takes relevant parameters
+		MSTCUSTOMER customer = new MSTCUSTOMER();
+		customer.setCustomerName(columns[1].replace("\"", "").trim());
+		
+		//Handle the case of male or female gender
+		String sex = columns[2].replace("\"", "").trim();
+		if (Constants.MALE_GENDER.equals(sex)) {
+	        customer.setSex("1");
+	    } else if (Constants.FEMALE_GENDER.equals(sex)) {
+	        customer.setSex("0");
+	    } else {
+	        customer.setSex(sex);
+	    }
+		
+		customer.setBirthDay(columns[3].replace("\"", "").trim());
+		customer.setEmail(columns[4].replace("\"", "").trim());
+		customer.setAddress(columns[5].replace("\"", "").trim());
+
+	    return customer;
+	}
+	
+	/**
+	 * Validate data from file
+	 * 
+	 * @param lines 		 Input is CSV file
+	 * @return errorMessages Returns a list of errorMessages
+	 */
+	private ActionMessages validateData(String[] lines) {
+		ActionMessages messageErrors = new ActionMessages();
+		
+		//string test = pro.
+	    for (int i = 1; i < lines.length; i++) {
+	        String line = lines[i];
+	        String[] columns = line.split(",");
+	        List<MSTCUSTOMER> listCustomer = getAllCustomer();
+	        
+	        if (columns.length >= 6) {
+	            String customerIdFromFile = columns[0].replace("\"", "").trim();
+	            String customerNameFromFile = columns[1].replace("\"", "").trim();
+	            String customerSexFromFile = columns[2].replace("\"", "").trim();
+	            String customerBirthDayFromFile = columns[3].replace("\"", "").trim();
+	            String customerEmailFromFile = columns[4].replace("\"", "").trim();
+	            String customerAddressFromFile = columns[5].replace("\"", "").trim();
+
+	            if (!customerIdFromFile.isEmpty()) {
+                    boolean isCustomerExisted = false;
+                    for (MSTCUSTOMER customer : listCustomer) {
+                        String customerId = String.valueOf(customer.getCustomerId());
+
+                        //Check the CUSTOMER_ID in the MSTCUSTOMER table
+                        if (customerId.equals(customerIdFromFile) && customer.getDeleteYMD() == null) {
+                            isCustomerExisted = true;
+                            break;
+                        }
+                    }
+                    if (!isCustomerExisted) {
+                        String errorMessageID = MessageFormat.format("Line {0} : CUSTOMER_ID={1} is not existed", i + 1, customerIdFromFile);
+                        messageErrors.add("", new ActionMessage(errorMessageID));
+                    }
+                }
+
+	            // Validate CUSTOMER_NAME length
+                if (customerNameFromFile.isEmpty()) {
+                    String messageName = MessageFormat.format(("Line {0} : CUSTOMER_ID={1} is not existed"), i + 1, customerNameFromFile);
+                    messageErrors.add("", new ActionMessage(messageName));
+                } else if (customerNameFromFile.length() > 50) {
+                    String messageNameLength = MessageFormat.format("Line {0} : Value of CSUTOMER_NAME is more than 50 characters", i + 1);
+                    messageErrors.add("", new ActionMessage(messageNameLength));
+                }
+
+                // Validate SEX validity
+                if (!Constants.MALE_GENDER.equals(customerSexFromFile) && !Constants.FEMALE_GENDER.equals(customerSexFromFile)) {
+                	String messageSex = MessageFormat.format("Line {0} : SEX={1} is invalid", i + 1, customerSexFromFile);
+                	messageErrors.add("", new ActionMessage(messageSex));
+                }
+
+                // Validate BIRTHDAY format and validity
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+                    LocalDate parsedDate = LocalDate.parse(customerBirthDayFromFile, formatter);
+
+                    if (!isValidDate(parsedDate)) {
+                    	String messageBirthDay = MessageFormat.format("Line {0} : BIRTHDAY={1} is invalid", i + 1, customerBirthDayFromFile);
+                    	messageErrors.add("", new ActionMessage(messageBirthDay));
+                    }
+                } catch (DateTimeParseException e) {
+                	e.printStackTrace();
+                }
+
+                // Validate EMAIL format and length
+                if (!isValidEmail(customerEmailFromFile)) {
+                	String messageEmailFormat = MessageFormat.format("Line {0} : EMAIL={1} is invalid", i + 1, customerEmailFromFile);
+                	messageErrors.add("", new ActionMessage(messageEmailFormat));
+                } else if (customerEmailFromFile.length() > 40) {
+                	String messageEmailLength = MessageFormat.format("Line {0} : Value of EMAIL is more than 40 characters", i + 1);
+                	messageErrors.add("", new ActionMessage(messageEmailLength));
+                }
+
+                // Validate ADDRESS length
+                if (customerAddressFromFile.length() > 256) {
+                	String messageAddress = MessageFormat.format("Line {0} : Value of ADDRESS is more than 256 characters", i + 1);
+                	messageErrors.add("", new ActionMessage(messageAddress));
+                }
+	        }
+	    }
+	    return messageErrors;
+	}
+	
+	/**
+     * Builds an import message based on the import result.
+     *
+     * @param importResult The import result containing success message, inserted lines, and updated lines.
+     * @return A formatted import message.
+     */
+	private String buildImportMessage(Map<String, Object> importResult) {
+		// Create a StringBuilder to build the message
+	    StringBuilder message = new StringBuilder(importResult.get("successMessage").toString());
+
+	    if (importResult.containsKey("insertedLines")) {
+	        message.append("\nInserted line(s): ");
+	        @SuppressWarnings("unchecked")
+			List<Integer> insertedLines = (List<Integer>) importResult.get("insertedLines");
+	        for (int i = 0; i < insertedLines.size(); i++) {
+	            message.append(insertedLines.get(i));
+	            if (i < insertedLines.size() - 1) {
+	                message.append(", ");
+	            }
+	        }
+	    }
+
+	    if (importResult.containsKey("updatedLines")) {
+	        message.append("\nUpdate line(s): ");
+	        @SuppressWarnings("unchecked")
+			List<Integer> updatedLines = (List<Integer>) importResult.get("updatedLines");
+	        for (int i = 0; i < updatedLines.size(); i++) {
+	            message.append(updatedLines.get(i));
+	            if (i < updatedLines.size() - 1) {
+	                message.append(", ");
+	            }
+	        }
+	    }
+
+	    return message.toString();
+	}
+	
+	/**
+	 * Check email address
+	 * 
+	 * @param email	Email needs checking
+	 * @return		Returns whether the Email is in the correct format or not
+	 */
+	private static boolean isValidEmail(String email) {
+	    //Check the basic format of the email
+	    String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+
+	    //Check email format by regex matching
+	    return email.matches(emailRegex);
+	}
+	
+	/**
+	 * Check birthday date
+	 * 
+	 * @param date The birthday date is checked and transmitted
+	 * @return 	   Returns whether the date is correct or not
+	 */
+	private static boolean isValidDate(LocalDate date) {
+	    try {
+	    	//Test the format again to check if the date is valid
+	        LocalDate.parse(date.toString());
+	        return true;
+	    } catch (DateTimeParseException e) {
+	        return false;
+	    }
+	}
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ※ Danh sách column có thể thay đổi (ẩn/hiện/sắp xếp) trên header danh sách kết quả search ở màn hình search																																																																																	
 																																																																																	
 		Column									Ẩn						Hiện						Sắp xếp																																																										
