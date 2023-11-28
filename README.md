@@ -1,3 +1,41 @@
+hiện tại tôi đang có đoạn code như này 
+
+String baseFolder = "C:\\";
+String errorsFolder = "errors";
+String driveName = Paths.get(baseFolder, errorsFolder).toString();
+
+Tôi muốn setting giá trị này ở application.properties 2 giá trị 
+
+baseFolder = "C:\\"
+errorsFolder = "errors"
+
+rồi ở file java 
+String baseFolder = gọi giá trị từ application.properties;
+String errorsFolder = gọi giá trị từ application.properties;
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  <servlet-mapping>
         <servlet-name>action</servlet-name>
         <url-pattern>*.do</url-pattern> <!-- Điều này có thể thay đổi tùy theo URL pattern của bạn -->
