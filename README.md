@@ -1,3 +1,38 @@
+public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String forward = Constants.FORWARD_FAILURE;
+		LoginForm loginForm = (LoginForm) form;
+		HttpSession session = request.getSession(true);
+
+		// Get the action on the login screen and post it
+		String modeLogin = loginForm.getsMode();
+
+		// Check if the user clicks on the login button then logs in
+		if (Constants.MODE_LOGIN.equals(modeLogin)) {
+			LoginService loginService = (LoginService) getWebApplicationContext().getBean(Constants.BEAN_LOGIN);
+			MSTUSER user = new MSTUSER();
+			BeanUtils.copyProperties(user, loginForm);
+			MSTUSER loggedInUser = loginService.getLoggedInUser(user);
+
+			// If loggedInUser is present, switch to the Search screen
+			if (loggedInUser != null) {
+				session.setAttribute(Constants.SESSION_LOGIN_USER, loggedInUser);
+				forward = Constants.FORWARD_SUCCESS;
+			} else {
+				// If login fails, save the error value
+				ActionMessages errors = new ActionMessages();
+				errors.add("", new ActionMessage("errors.notExist"));
+				saveErrors(request, errors);
+			}
+		}
+		return mapping.findForward(forward);
+	}
+
+
+
+
+
+
 hiện tại tôi đang có đoạn code như này 
 
 String baseFolder = "C:\\";
