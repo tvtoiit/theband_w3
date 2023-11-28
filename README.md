@@ -1,3 +1,130 @@
+※ Danh sách column có thể thay đổi (ẩn/hiện/sắp xếp) trên header danh sách kết quả search ở màn hình search																																																																																	
+																																																																																	
+		Column									Ẩn						Hiện						Sắp xếp																																																										
+		1. CheckBox									×						〇						〇										〇　: Có thể																																																
+		2. Customer ID									×						〇						〇										×　: Không thể																																																
+		3. Customer Name									〇						〇						〇																																																										
+		4. Sex									〇						〇						〇																																																										
+		5. Birthday									〇						〇						〇																																																										
+		6. Email									〇						〇						〇																																																										
+		7. Address									〇						〇						〇																																																										
+																																																																																	
+	Init màn hình																																																																																
+		Outline																																																																															
+			- Khi init màn hình thì hiển thị data tại danh sách header bên trái là chưa được hiển thị ở màn hình search, bên phải là đã hiển thị ở màn hình search																																																																														
+		Chi tiết xử lý																																																																															
+			1/ Hiển thị tên của user đã thực hiện đăng nhập tại item <User Name> ①																																																																														
+																																																																																	
+			2/ Xử lý hiển thị danh sách header bên trái là các column không được hiển thị ở màn hình Search																																																																														
+																																																																																	
+			3/ Xử lý hiển thị danh sách header bên phải là các column được hiển thị ở màn hình Search																																																																														
+																																																																																	
+			4/ Xử lý enable/disable các button :																																																																														
+																																																																																	
+				4.1/ Trường hợp danh sách bên trái không tồn tại,																																																																													
+						xử lí disable các button bên dưới:																																																																											
+							Button<Right>⑤																																																																										
+																																																																																	
+				* Lưu ý : Việc disable các button còn phụ thuộc vào danh sách 2 bên đang hiển thị																																																																													
+																																																																																	
+	Button Right																																																																																
+		Outline																																																																															
+			- Khi click button này thì tiến hành di chuyển 1 item đã chọn của list bên trái sang list bên phải																																																																														
+		Chi tiết xử lý																																																																															
+			1/ Trường hợp chưa select <Header Item> ③.① tiến hành xuất message (alert) :  "行を選択してください。"																																																																														
+																																																																																	
+			2/ Trường hợp đã select <Header Item> ④.① thì tiến hành di chuyển item đã select từ danh sách bên trái vào dưới cùng của danh sách bên phải																																																																														
+																																																																																	
+			3/ Trường hợp danh sách header ③ trống thì tiến hành disable button<Right>⑤																																																																														
+																																																																																	
+	Button Left																																																																																
+		Outline																																																																															
+			- Khi click button này thì tiến hành di chuyển 1 item đã chọn của list bên phải sang list bên trái																																																																														
+		Chi tiết xử lý																																																																															
+			1/ Trường hợp chưa select <Header Item> ④.① tiến hành xuất message (alert) :  "行を選択してください。"																																																																														
+																																																																																	
+			2/ Trường hợp đã select <Header Item> ④.① là item "CheckBox" hoặc "Customer ID" 																																																																														
+				 thì tiến hành xuất message (alert): "[{0}] cannot remove !", với {0} là tên column đang chọn																																																																													
+																																																																																	
+			3/ Trường hợp đã select <Header Item> ④.① thì tiến hành di chuyển item đã select từ danh sách bên phải ④ vào dưới cùng của danh sách bên trái ③																																																																														
+																																																																																	
+	Button Up																																																																																
+		Outline																																																																															
+			- Khi click button này thì tiến hành di chuyển 1 item đã chọn lên trên 1 bật																																																																														
+		Chi tiết xử lý																																																																															
+			1/ Trường hợp chưa select <Header Item> ④.① tiến hành xuất message (alert) :  "行を選択してください。"																																																																														
+																																																																																	
+			2/ Trường hợp đã select <Header Item> ④.① 																																																																														
+				2.1/ Trường hợp ở vị trí đầu tiên thì không tiến hành hoán đổi và ngừng xử lí																																																																													
+				2.2/ Trường hợp không ở vị trí đầu tiên thì tiến hành hoán đổi vị trí với item phía trên và giữ trạng thái đang selected																																																																													
+																																																																																	
+	Button Down																																																																																
+		Outline																																																																															
+			- Khi click button này thì tiến hành di chuyển 1 item đã chọn xuống dưới 1 bật																																																																														
+		Chi tiết xử lý																																																																															
+			1/ Trường hợp chưa select <Header Item> ④.① tiến hành xuất message (alert) :  "行を選択してください。"																																																																														
+																																																																																	
+			2/ Trường hợp đã select <Header Item> ④.① 																																																																														
+				2.1/ Trường hợp ở vị trí cuối cùng thì không tiến hành hoán đổi và ngừng xử lí																																																																													
+				2.2/ Trường hợp không ở vị trí cuối cùng thì tiến hành hoán đổi vị trí với item phía dưới và giữ trạng thái đang selected																																																																													
+																																																																																	
+	Button Save																																																																																
+		Outline																																																																															
+			- Khi click button này thì tiến hành lưu vị trí hiển thị của danh sách ④ và áp dụng cho màn hình search																																																																														
+		Chi tiết xử lý																																																																															
+			1/ Tiến hành lưu vị trí hiển thị các column và áp dụng sang cho màn hình Search																																																																														
+																																																																																	
+			2/ Di chuyển về màn hình search																																																																														
+																																																																																	
+	Button Cancel																																																																																
+		Outline																																																																															
+			- Khi click button này thì tiến hành xóa bỏ các thay để ở 2 bên danh sách và di chuyển về màn hình search																																																																														
+		Chi tiết xử lý																																																																															
+			1/ Tiến hành xóa bỏ các thay đổi ở 2 bên danh sách và không áp dụng cho màn hình search																																																																														
+																																																																																	
+			2/ Di chuyển về màn hình search																																																																														
+																																																																																	
+																																																																																	
+																																																																																	
+																																																																																	
+																																																																																	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //Save the display value of the edit interface
 		if (customerId != null && !Constants.MODE_SAVE.equals(editMode)) {
 			editService.displayEditInterfaceValues(customer, editForm);
