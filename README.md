@@ -5,6 +5,325 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Move Items</title>
+	 <link rel="stylesheet" href="https://cdn.materialdesignicons.com/5.9.55/css/materialdesignicons.min.css">
+
+    <style type="text/css">
+		<%@include file="../WEB-INF/css/import.css" %>
+	</style>
+</head>
+<body>
+
+    <select id="leftList" multiple>
+        <option value="item1">Item 1</option>
+        <option value="item2">Item 2</option>
+        <option value="item3">Item 3</option>
+    </select>
+
+    <button id="moveRight">Move Right</button>
+    <button id="moveLeft">Move Left</button>
+    <button id="moveUp">Move Up</button>
+    <button id="moveDown">Move Down</button>
+    <button id="cancel">Cancel</button>
+    <button id="saveButton">Save</button>
+
+    <select id="rightList" multiple></select>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initial state of header items
+        var headerItems = [
+            { name: 'CheckBox', hidden: true, shown: false, sortable: true },
+            { name: 'Customer ID', hidden: true, shown: false, sortable: true },
+            { name: 'Customer Name', hidden: false, shown: true, sortable: true },
+            { name: 'Sex', hidden: false, shown: true, sortable: true },
+            { name: 'Birthday', hidden: false, shown: true, sortable: true },
+            { name: 'Email', hidden: false, shown: true, sortable: true },
+            { name: 'Address', hidden: false, shown: true, sortable: true }
+        ];
+
+        // Helper function to update the display of header items
+        function updateHeaderDisplay() {
+            var leftList = document.getElementById('leftList');
+            var rightList = document.getElementById('rightList');
+
+            // Clear existing items
+            leftList.innerHTML = '';
+            rightList.innerHTML = '';
+
+            // Add items to left and right lists based on visibility
+            headerItems.forEach(function (item) {
+                var option = document.createElement('option');
+                option.value = item.name;
+                option.text = item.name;
+
+                if (item.shown) {
+                    rightList.add(option);
+                } else {
+                    leftList.add(option);
+                }
+            });
+
+            // Disable button if left list is empty
+            document.getElementById('moveRight').disabled = leftList.options.length === 0;
+        }
+
+        // Initialize header display
+        updateHeaderDisplay();
+
+        // Move Right
+        document.getElementById('moveRight').addEventListener('click', function () {
+            var leftList = document.getElementById('leftList');
+            var rightList = document.getElementById('rightList');
+            var selectedItems = leftList.selectedOptions;
+
+            if (selectedItems.length === 0) {
+                alert('行を選択してください。');
+                return;
+            }
+
+            // Move selected items from left to right
+            Array.from(selectedItems).forEach(function (selectedItem) {
+                rightList.add(selectedItem);
+            });
+
+            // Update headerItems based on the move
+            headerItems.forEach(function (item) {
+                if (rightList.querySelector('option[value="' + item.name + '"]')) {
+                    item.shown = true;
+                    item.hidden = false;
+                } else {
+                    item.shown = false;
+                    item.hidden = true;
+                }
+            });
+
+            // Update header display
+            updateHeaderDisplay();
+        });
+
+        // Move Left
+        document.getElementById('moveLeft').addEventListener('click', function () {
+            var leftList = document.getElementById('leftList');
+            var rightList = document.getElementById('rightList');
+            var selectedItems = rightList.selectedOptions;
+
+            if (selectedItems.length === 0) {
+                alert('行を選択してください。');
+                return;
+            }
+
+            // Get values of selected items
+            var selectedItemValues = Array.from(selectedItems).map(function (selectedItem) {
+                return selectedItem.value;
+            });
+
+            // Check if any selected item is "CheckBox" or "Customer ID"
+            var invalidItems = selectedItemValues.filter(function (value) {
+                return value === 'CheckBox' || value === 'Customer ID';
+            });
+
+            if (invalidItems.length > 0) {
+                alert('[' + invalidItems.join(', ') + '] cannot remove !');
+                return;
+            }
+
+            // Move selected items from right to left
+            Array.from(selectedItems).forEach(function (selectedItem) {
+                leftList.add(selectedItem);
+            });
+
+            // Update headerItems based on the move
+            headerItems.forEach(function (item) {
+                if (leftList.querySelector('option[value="' + item.name + '"]')) {
+                    item.shown = false;
+                    item.hidden = true;
+                } else {
+                    item.shown = true;
+                    item.hidden = false;
+                }
+            });
+
+            // Update header display
+            updateHeaderDisplay();
+        });
+
+        // Move Up
+        document.getElementById('moveUp').addEventListener('click', function () {
+            var rightList = document.getElementById('rightList');
+            var selectedOption = rightList.selectedOptions[0];
+
+            if (!selectedOption) {
+                alert('行を選択してください。');
+                return;
+            }
+
+            var currentIndex = selectedOption.index;
+
+            if (currentIndex === 0) {
+                // At the top position, cannot move up further
+                return;
+            }
+
+            // Get the item above and swap positions
+            var aboveItem = rightList.options[currentIndex - 1];
+            rightList.insertBefore(selectedOption, aboveItem);
+        });
+
+        // Move Down
+        document.getElementById('moveDown').addEventListener('click', function () {
+            var rightList = document.getElementById('rightList');
+            var selectedOption = rightList.selectedOptions[0];
+
+            if (!selectedOption) {
+                alert('行を選択してください。');
+                return;
+            }
+
+            var currentIndex = selectedOption.index;
+
+            if (currentIndex === rightList.options.length - 1) {
+                // At the bottom position, cannot move down further
+                return;
+            }
+
+            // Get the item below and swap positions
+            var belowItem = rightList.options[currentIndex + 1];
+            var clonedSelected = selectedOption.cloneNode(true);
+
+            // Swap positions
+            rightList.options[currentIndex + 1] = clonedSelected;
+            rightList.options[currentIndex] = belowItem;
+
+            // Update selected status
+            rightList.options[currentIndex].selected = false;
+            rightList.options[currentIndex + 1].selected = true;
+        });
+
+        // Xử lý sự kiện khi nút "Cancel" được nhấn
+        document.getElementById('cancel').addEventListener('click', function () {
+            var leftList = document.getElementById('leftList');
+            var rightList = document.getElementById('rightList');
+
+            // Remove all options from the right list
+            rightList.innerHTML = '';
+
+            // Move all options back to the left list
+            Array.from(leftList.options).forEach(function (option) {
+                rightList.add(option);
+            });
+
+            // Update headerItems based on the move
+            headerItems.forEach(function (item) {
+                if (rightList.querySelector('option[value="' + item.name + '"]')) {
+                    item.shown = true;
+                    item.hidden = false;
+                } else {
+                    item.shown = false;
+                    item.hidden = true;
+                }
+            });
+
+            // Update header display
+            updateHeaderDisplay();
+        });
+        
+     // Xử lý sự kiện khi nút "Cancel" được nhấn
+        document.getElementById('cancel').addEventListener('click', function () {
+            var leftList = document.getElementById('leftList');
+            var rightList = document.getElementById('rightList');
+            
+            // Remove all options from the right list
+            rightList.innerHTML = '';
+
+            // Move all options back to the left list
+            Array.from(rightList.options).forEach(function (option) {
+                leftList.add(option);
+            });
+
+            // Optionally, you can clear the selection in both lists
+            leftList.selectedIndex = -1;
+            rightList.selectedIndex = -1;
+        });
+     
+     
+        document.getElementById('saveButton').addEventListener('click', function () {
+            var rightList = document.getElementById('rightList');
+
+            // Get the current order of columns in the right list
+            var columnOrder = Array.from(rightList.options).map(function (option) {
+                return option.value;
+            });
+
+            // Save the column order (you can use localStorage or server-side storage)
+            localStorage.setItem('columnOrder', JSON.stringify(columnOrder));
+
+            // Redirect to the search page
+            window.location.href = './T002.do';
+        });   
+    });
+
+              
+     
+ // Function to apply the column order when the search page loads
+    function applyColumnOrder() {
+        var columnOrderString = localStorage.getItem('columnOrder');
+
+        if (columnOrderString) {
+            var columnOrder = JSON.parse(columnOrderString);
+            var searchTableHeader = document.querySelector('.search-container__table--tieude');
+
+            columnOrder.forEach(function (columnName) {
+                var columnHeader = searchTableHeader.querySelector('th:contains("' + columnName + '")');
+                searchTableHeader.appendChild(columnHeader);
+            });
+        }
+    }
+
+    // Call the function to apply the column order when the search page loads
+    applyColumnOrder();      
+    
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Move Items</title>
 </head>
 <body>
     <select id="leftList" multiple>
