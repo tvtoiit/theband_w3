@@ -1,3 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Move Items</title>
+</head>
+<body>
+    <select id="leftList" multiple>
+        <option value="item1">Item 1</option>
+        <option value="item2">Item 2</option>
+        <option value="item3">Item 3</option>
+    </select>
+
+    <button id="moveRight">Move Right</button>
+    <button id="moveLeft">Move Left</button>
+    <button id="moveUp">Move Up</button>
+    <button id="moveDown">Move Down</button>
+
+    <select id="rightList" multiple></select>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Move Right
+            document.getElementById('moveRight').addEventListener('click', function () {
+                var leftList = document.getElementById('leftList');
+                var rightList = document.getElementById('rightList');
+                var selectedItems = leftList.selectedOptions;
+
+                if (selectedItems.length === 0) {
+                    alert('行を選択してください。');
+                    return;
+                }
+
+                // Move selected items from left to right
+                Array.from(selectedItems).forEach(function (selectedItem) {
+                    rightList.add(selectedItem);
+                });
+
+                // Disable button if left list is empty
+               /*  document.getElementById('moveRight').disabled = leftList.options.length === 0; */
+            });
+
+            // Move Left
+            document.getElementById('moveLeft').addEventListener('click', function () {
+                var leftList = document.getElementById('leftList');
+                var rightList = document.getElementById('rightList');
+                var selectedItems = rightList.selectedOptions;
+
+                if (selectedItems.length === 0) {
+                    alert('行を選択してください。');
+                    return;
+                }
+
+                // Get values of selected items
+                var selectedItemValues = Array.from(selectedItems).map(function (selectedItem) {
+                    return selectedItem.value;
+                });
+
+                // Check if any selected item is "CheckBox" or "Customer ID"
+                var invalidItems = selectedItemValues.filter(function (value) {
+                    return value === 'CheckBox' || value === 'Customer ID';
+                });
+
+                if (invalidItems.length > 0) {
+                    alert('[' + invalidItems.join(', ') + '] cannot remove !');
+                    return;
+                }
+
+                // Move selected items from right to left
+                Array.from(selectedItems).forEach(function (selectedItem) {
+                    leftList.add(selectedItem);
+                });
+            });
+
+            // Move Up
+            document.getElementById('moveUp').addEventListener('click', function () {
+                var rightList = document.getElementById('rightList');
+                var selectedOption = rightList.selectedOptions[0];
+
+                if (!selectedOption) {
+                    alert('行を選択してください。');
+                    return;
+                }
+
+                var currentIndex = selectedOption.index;
+
+                if (currentIndex === 0) {
+                    // At the top position, cannot move up further
+                    return;
+                }
+
+                // Get the item above and swap positions
+                var aboveItem = rightList.options[currentIndex - 1];
+                rightList.insertBefore(selectedOption, aboveItem);
+            });
+            
+            document.addEventListener('DOMContentLoaded', function () {
+                // Move Down
+                document.getElementById('moveDown').addEventListener('click', function () {
+                    var rightList = document.getElementById('rightList');
+                    var selectedOption = rightList.selectedOptions[0];
+
+                    if (!selectedOption) {
+                        alert('行を選択してください。');
+                        return;
+                    }
+
+                    var currentIndex = selectedOption.index;
+
+                    if (currentIndex === rightList.options.length - 1) {
+                        // At the bottom position, cannot move down further
+                        return;
+                    }
+
+                    // Get the item below and swap positions
+                    var belowItem = rightList.options[currentIndex + 1];
+                    var clonedSelected = selectedOption.cloneNode(true);
+                    
+                    // Swap positions
+                    rightList.options[currentIndex + 1] = clonedSelected;
+                    rightList.options[currentIndex] = belowItem;
+
+                    // Update selected status
+                    rightList.options[currentIndex].selected = false;
+                    rightList.options[currentIndex + 1].selected = true;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
 * Copyright(c) Fujinet Co., Ltd.
 * All rights reserved. 
