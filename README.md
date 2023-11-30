@@ -1,3 +1,111 @@
+document.getElementById('saveButton').addEventListener('click', function () {
+    saveToLocalStorage();
+});
+
+
+function saveToLocalStorage() {
+    var rightList = document.getElementById('rightList');
+    var selectedValues = Array.from(rightList.options).map(option => option.value);
+
+    // Lưu giá trị vào localStorage
+    localStorage.setItem('savedValues', JSON.stringify(selectedValues));
+}
+
+
+
+
+
+// Lấy giá trị từ localStorage
+var savedValues = JSON.parse(localStorage.getItem('savedValues')) || [];
+
+// Lặp qua mỗi giá trị và hiển thị trong bảng tìm kiếm
+savedValues.forEach(function (value) {
+    // Tạo một hàng (tr) cho mỗi giá trị
+    var newRow = document.createElement('tr');
+
+    // Thêm checkbox vào hàng
+    var checkboxCell = document.createElement('td');
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.name = 'selectedCustomers';
+    checkbox.value = value.customerId; // Điều chỉnh giá trị tùy thuộc vào cấu trúc dữ liệu của bạn
+    checkboxCell.appendChild(checkbox);
+    newRow.appendChild(checkboxCell);
+
+    // Thêm các cột khác vào hàng dựa trên giá trị từ localStorage
+    headerItems.forEach(function (item) {
+        var cell = document.createElement('td');
+
+        // Kiểm tra xem giá trị của item có phải là customerId không
+        if (item.name === 'Customer ID') {
+            cell.innerHTML = value.customerId; // Điều chỉnh giá trị tùy thuộc vào cấu trúc dữ liệu của bạn
+        } else if (item.name === 'Customer Name') {
+            cell.innerHTML = value.customerName;
+        } else if (item.name === 'Sex') {
+            cell.innerHTML = value.sex;
+        } else if (item.name === 'Birthday') {
+            cell.innerHTML = value.birthDay;
+        } else if (item.name === 'Address') {
+            cell.innerHTML = value.address;
+        }
+
+        newRow.appendChild(cell);
+    });
+
+    // Thêm hàng vào bảng
+    document.getElementById('sortableTable').appendChild(newRow);
+});
+
+
+
+
+
+
+
+function updateHeaderDisplay() {
+    var leftList = document.getElementById('leftList');
+    var rightList = document.getElementById('rightList');
+
+    // Clear existing items
+    leftList.innerHTML = '';
+    rightList.innerHTML = '';
+
+    // Add items to left and right lists based on visibility
+    headerItems.forEach(function (item) {
+        var option = document.createElement('option');
+        option.value = item.name;
+        option.text = item.name;
+
+        // Check if the item is in localStorageValues
+        var localStorageItem = localStorageValues.find(function (localStorageItem) {
+            return localStorageItem.name === item.name;
+        });
+
+        if (localStorageItem) {
+            // If the item is in localStorageValues, add to leftList
+            leftList.add(option);
+        } else {
+            // If the item is not in localStorageValues, add to rightList
+            rightList.add(option);
+        }
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <script type="text/javascript">
 //Lấy giá trị từ localStorage
 var localStorageValues  = JSON.parse(localStorage.getItem('columnOrder'));
