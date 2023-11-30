@@ -1,3 +1,63 @@
+<script type="text/javascript">
+//Lấy giá trị từ localStorage
+var localStorageValues  = JSON.parse(localStorage.getItem('columnOrder'));
+
+//Xác định phần tử bảng
+var table = document.getElementById('sortableTable');
+
+// Xác định hàng đầu tiên (tiêu đề)
+var headerRow = table.rows[0];
+
+// Tạo một mảng mới để lưu trữ index của các cột theo thứ tự từ localStorage
+var columnOrder = [];
+
+// Xác định index của cột Customer ID và giữ nguyên
+columnOrder.push(1);
+
+// Xác định index của các cột còn lại dựa trên giá trị từ localStorage
+for (var i = 0; i < localStorageValues.length; i++) {
+    var columnName = localStorageValues[i];
+    var columnIndex = Array.from(headerRow.cells).findIndex(cell => cell.innerHTML.trim() === columnName);
+    if (columnIndex !== -1) {
+        columnOrder.push(columnIndex);
+    }
+}
+
+// Sắp xếp lại các thẻ th trong hàng đầu tiên dựa trên mảng columnOrder
+var newHeaderCells = columnOrder.map(index => headerRow.cells[index]);
+headerRow.innerHTML = ''; // Xóa toàn bộ nội dung trong hàng đầu tiên
+for (var i = 0; i < newHeaderCells.length; i++) {
+    headerRow.appendChild(newHeaderCells[i].cloneNode(true));
+}
+
+// Cập nhật các thẻ td trong các hàng còn lại
+var dataRows = Array.from(table.rows).slice(1); // Lấy tất cả các hàng trừ hàng đầu tiên
+for (var i = 0; i < dataRows.length; i++) {
+    var dataRow = dataRows[i];
+    var cells = dataRow.cells;
+
+    for (var j = 0; j < columnOrder.length; j++) {
+        var columnIndex = columnOrder[j];
+        var newCell = cells[columnIndex].cloneNode(true);
+        dataRow.appendChild(newCell);
+    }
+}
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
