@@ -1,6 +1,22 @@
-for (var i = 0; i < selectElement.options.length; i++) {
-            selectElement.options[i].selected = true;
+function updateInput() {
+        // Lấy thẻ select
+        var selectElement = document.getElementById("listRight");
+
+        // Mảng để lưu trữ giá trị của các tùy chọn
+        var selectedValues = [];
+
+        // Lặp qua tất cả các tùy chọn và lưu giá trị vào mảng
+        for (var i = 0; i < selectElement.options.length; i++) {
+            selectedValues.push(selectElement.options[i].value);
         }
+
+        // Nối giá trị của mảng thành một chuỗi, sử dụng dấu phẩy làm phân cách
+        var concatenatedValues = selectedValues.join(',');
+
+        // Cập nhật giá trị của thẻ input
+        var inputElement = document.getElementById("input");
+        inputElement.value = concatenatedValues;
+    }
  
  
  
