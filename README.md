@@ -1,3 +1,12 @@
+for (var i = 0; i < selectElement.options.length; i++) {
+            selectElement.options[i].selected = true;
+        }
+ 
+ 
+ 
+ 
+ 
+ 
  var dataRows = document.querySelectorAll('#sortableTable tbody .tr-table');
 
     dataRows.forEach(dataRow => {
