@@ -1,3 +1,15 @@
+<bean:define id="myVariable" name="myForm" property="myProperty" />
+
+<!-- Sử dụng biến đã được định nghĩa -->
+<%= myVariable %>
+
+
+
+
+
+
+
+
 function updateInput() {
         // Lấy thẻ select
         var selectElement = document.getElementById("listRight");
