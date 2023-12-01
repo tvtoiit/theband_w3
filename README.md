@@ -1,3 +1,50 @@
+ var dataRows = document.querySelectorAll('#sortableTable tbody .tr-table');
+
+    dataRows.forEach(dataRow => {
+        let tdHtml = '';
+        localStorageValues.forEach(item => {
+            var columnName = item.key;
+            switch (columnName) {
+                case 'Checkbox':
+                    tdHtml += '<td><input type="checkbox" name="selectedCustomers" value="<bean:write name=\'dept\' property=\'customerId\'/>"></td>';
+                    break;
+                case 'CustomerId':
+                    tdHtml += '<td><html:link action="/T003"><html:param name="id"><bean:write name="dept" property="customerId" /></html:param><bean:write name="dept" property="customerId" /></html:link></td>';
+                    break;
+                case 'CustomerName':
+                    tdHtml += '<td><bean:write name=\'dept\' property=\'customerName\' /></td>';
+                    break;
+                case 'Sex':
+                    tdHtml += '<td><bean:write name=\'dept\' property=\'sex\' /></td>';
+                    break;
+                case 'BirthDay':
+                    tdHtml += '<td><bean:write name=\'dept\' property=\'birthDay\' /></td>';
+                    break;
+                case 'Address':
+                    tdHtml += '<td><bean:write name=\'dept\' property=\'address\' /></td>';
+                    break;
+            }
+        });
+        dataRow.innerHTML = tdHtml;
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <script type="text/javascript">
 document.addEventListener('DOMContentLoaded', function () {
     var localStorageValues = JSON.parse(localStorage.getItem('columnOrder'));
