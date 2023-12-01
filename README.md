@@ -1,8 +1,19 @@
-<bean:define id="myVariable" name="myForm" property="myProperty" />
+function replaceThWithInput() {
+        // Get all th elements
+        var thElements = document.querySelectorAll('#myTable th');
 
-<!-- Sử dụng biến đã được định nghĩa -->
-<%= myVariable %>
+        thElements.forEach(function(thElement) {
+            // Check if the th contains the text "Check box"
+            if (thElement.textContent.trim().toLowerCase() === 'check box') {
+                // Create a new input element
+                var inputElement = document.createElement('input');
+                inputElement.type = 'checkbox';
 
+                // Replace the th with the new input element
+                thElement.parentNode.replaceChild(inputElement, thElement);
+            }
+        });
+    }
 
 
 
