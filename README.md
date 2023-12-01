@@ -1,20 +1,18 @@
-function replaceThWithInput() {
+function replaceThContentWithCheckboxInput() {
         // Get all th elements
         var thElements = document.querySelectorAll('#myTable th');
 
         thElements.forEach(function(thElement) {
             // Check if the th contains the text "Check box"
             if (thElement.textContent.trim().toLowerCase() === 'check box') {
-                // Create a new input element
-                var inputElement = document.createElement('input');
-                inputElement.type = 'checkbox';
-
-                // Replace the th with the new input element
-                thElement.parentNode.replaceChild(inputElement, thElement);
+                // Replace the content of the th with the input element
+                thElement.innerHTML = '<input type="checkbox" />';
             }
         });
     }
 
+    // Call the function on page load or whenever needed
+    replaceThContentWithCheckboxInput();
 
 
 
