@@ -1,3 +1,29 @@
+List<String> item = (List<String>) session.getAttribute("settingHeader");
+
+// Kiểm tra xem list có giá trị không rỗng và không phải null
+if (item != null && !item.isEmpty()) {
+    // Tạo một list mới để lưu trữ các phần tử đã cắt từ chuỗi
+    List<String> separatedItems = new ArrayList<>();
+
+    // Lặp qua mỗi chuỗi trong list item
+    for (String str : item) {
+        // Sử dụng phương thức split để cắt chuỗi thành các phần tử dựa trên dấu phẩy
+        String[] separatedValues = str.split(",");
+
+        // Thêm các phần tử đã cắt vào list mới
+        separatedItems.addAll(Arrays.asList(separatedValues));
+    }
+
+    // In ra các phần tử đã cắt
+    for (String separatedItem : separatedItems) {
+        System.out.println(separatedItem);
+    }
+}
+
+
+
+
+
 function updateInput() {
         // Lấy thẻ select
         var selectElement = document.getElementById("listRight");
