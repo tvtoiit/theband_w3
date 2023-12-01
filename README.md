@@ -1,3 +1,7 @@
+<html:optionsCollection property="yourArrayList" />
+
+
+
 List<String> item = (List<String>) session.getAttribute("settingHeader");
 
 // Kiểm tra xem list có giá trị không rỗng và không phải null
