@@ -1,28 +1,26 @@
-<html:optionsCollection property="yourArrayList" />
+function updateInput() {
+        // Lấy thẻ select
+        var selectElement = document.getElementById("listRight");
 
+        // Đối tượng để lưu trữ cặp key-value của các tùy chọn
+        var selectedOptions = [];
 
+        // Lặp qua tất cả các tùy chọn và lưu key và value vào đối tượng
+        for (var i = 0; i < selectElement.options.length; i++) {
+            var option = selectElement.options[i];
+            var key = option.value;
+            var value = option.text;
 
-List<String> item = (List<String>) session.getAttribute("settingHeader");
+            selectedOptions.push({ key: key, value: value });
+        }
 
-// Kiểm tra xem list có giá trị không rỗng và không phải null
-if (item != null && !item.isEmpty()) {
-    // Tạo một list mới để lưu trữ các phần tử đã cắt từ chuỗi
-    List<String> separatedItems = new ArrayList<>();
-
-    // Lặp qua mỗi chuỗi trong list item
-    for (String str : item) {
-        // Sử dụng phương thức split để cắt chuỗi thành các phần tử dựa trên dấu phẩy
-        String[] separatedValues = str.split(",");
-
-        // Thêm các phần tử đã cắt vào list mới
-        separatedItems.addAll(Arrays.asList(separatedValues));
+        // Chuyển đối tượng thành chuỗi JSON và cập nhật giá trị của thẻ input
+        var inputElement = document.getElementById("input");
+        inputElement.value = JSON.stringify(selectedOptions);
     }
 
-    // In ra các phần tử đã cắt
-    for (String separatedItem : separatedItems) {
-        System.out.println(separatedItem);
-    }
-}
+
+
 
 
 
