@@ -1,3 +1,349 @@
+
+public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) throws Exception 
+	{
+		ImportForm importForm = (ImportForm)form;
+        HttpSession session = request.getSession();
+        String header[] = importForm.getSettingHeader();
+        
+        //Bấm nut save 
+        
+        String sMode = importForm.getsMode();
+        if ("right".equals(sMode)) {
+        	String listRightSubmit[] = importForm.getListRight();
+        	String[] listHeader = new String[] {"1", "2", "3", "4", "5", "6"};
+        	
+        	List<String> filteredListRightSubmit = new ArrayList<>();
+        	for (String value : listRightSubmit) {
+        	    for (String headerItem : listHeader) {
+        	        if (!value.equals(headerItem)) {
+        	        	 filteredListRightSubmit.add(headerItem);
+        	        }
+        	    }
+        	}
+
+        	listRightSubmit = filteredListRightSubmit.toArray(new String[0]);
+        }
+        String settingHeaderLeft[] = new String[]{"1", "2", "3", "4", "5", "6"};
+        if ( header != null ) {
+        	String[] listHeader = header[0].split(",");
+       	List<String> listLeft = new ArrayList<>();
+
+            for (String item : settingHeaderLeft) {
+                boolean found = false;
+                for (String itemHeader : listHeader) {
+                    if (item.equals(itemHeader)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    listLeft.add(item);
+                }
+            }
+            
+            // Chuyển danh sách sang mảng nếu cần
+            String[] resultArray = listLeft.toArray(new String[0]);
+            importForm.setListLeft(resultArray);
+            request.setAttribute("importForm", importForm);
+            System.out.println(resultArray);
+        	return mapping.findForward("T002");
+        }else {
+        	String headerSetting[] =(String[])session.getAttribute("settingheader");
+        	
+        	// Tách mảng settingHeaderLeft thành các phần tử khác nhau
+        	 String[] differentElements = getDifferentElements(settingHeaderLeft, headerSetting);
+        	  
+            importForm.setListLeft(differentElements);
+        	importForm.setSettingHeader(headerSetting);
+        }
+        
+       
+        
+        
+        request.setAttribute("importForm", importForm);
+		return mapping.findForward("T004");
+	}
+	
+	// Hàm tách mảng thành các phần tử khác nhau
+	public String[] getDifferentElements(String[] array1, String[] array2) {
+	  List<String> listLeft = new ArrayList<>();
+
+	  // Duyệt từng phần tử của mảng 1
+	  for (String item : array1) {
+	    // Kiểm tra xem phần tử đó có tồn tại trong mảng 2 hay không
+	    boolean found = false;
+	    for (String item2 : array2) {
+	      if (item.equals(item2)) {
+	        found = true;
+	        break;
+	      }
+	    }
+
+	    // Nếu phần tử đó không tồn tại trong mảng 2
+	    if (!found) {
+	    	listLeft.add(item);
+	    }
+	  }
+	  
+	  
+	  String[] resultArray = listLeft.toArray(new String[0]);
+	  return resultArray;
+	}
+
+
+
+
+---------------------------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Move Items</title>
+    <%@include file="../common/taglib.jsp" %>
+	 <link rel="stylesheet" href="https://cdn.materialdesignicons.com/5.9.55/css/materialdesignicons.min.css">
+
+    <style type="text/css">
+		<%@include file="../WEB-INF/css/import.css" %>
+	</style>
+</head>
+<body>
+
+    <form action="./Import.do" method="POST">
+	    <select id="leftList" name="listLeft" multiple>
+	        <logic:iterate id="setting" name="importForm" property="listLeft">
+	       	 	<logic:equal name="setting" value="1">
+	       	 		<option value="1">Check Box</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="2">
+	       	 		<option value="2">Customer ID</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="3">
+	       	 		<option value="3">Customer Name</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="4">
+	       	 		<option value="4">Sex</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="5">
+	       	 		<option value="5">Birthday</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="6">
+	       	 		<option value="6">Address</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="7">
+	       	 		<option value="7">Email</option>
+	       	 	</logic:equal>
+	       	 </logic:iterate>
+	    </select>
+	    <button type="submit" name="sMode" value="right" id="moveRight">Move Right</button>
+    <button type="button" id="moveLeft">Move Left</button>
+		
+	    <select name="listRight" id="rightList" multiple>
+	    	<logic:iterate id="setting" name="importForm" property="settingHeader">
+	       	 	<logic:equal name="setting" value="1">
+	       	 		<option value="1">Check Box</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="2">
+	       	 		<option value="2">Customer ID</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="3">
+	       	 		<option value="3">Customer Name</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="4">
+	       	 		<option value="4">Sex</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="5">
+	       	 		<option value="5">Birthday</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="6">
+	       	 		<option value="6">Address</option>
+	       	 	</logic:equal>
+	       	 	<logic:equal name="setting" value="7">
+	       	 		<option value="7">Email</option>
+	       	 	</logic:equal>
+	       	 </logic:iterate>
+	    </select>
+	    <button id="moveDown">Move Down</button>
+	    <input type="hidden" name="settingHeader" id="settinginputsubmit" value=""/>
+	    <button type="submit" id="saveButton" onclick="updateInput()">Save</button>
+	</form>
+
+   <script>
+  
+   function updateInput() {
+   	
+       // Lấy thẻ select
+       var selectElement = document.getElementById("rightList");
+
+       // Mảng để lưu trữ giá trị của các tùy chọn
+       var selectedValues = [];
+
+       // Lặp qua tất cả các tùy chọn và lưu giá trị vào mảng
+       for (var i = 0; i < selectElement.options.length; i++) {
+           selectedValues.push(selectElement.options[i].value);
+       }
+
+       // Nối giá trị của mảng thành một chuỗi, sử dụng dấu phẩy làm phân cách
+       var concatenatedValues = selectedValues.join(',');
+
+       // Cập nhật giá trị của thẻ input
+       var inputElement = document.getElementById("settinginputsubmit");
+       inputElement.value = concatenatedValues;
+   }
+   
+   document.getElementById('moveDown').addEventListener('click', function () {
+       var rightList = document.getElementById('rightList');
+       var selectedOption = rightList.selectedOptions[0];
+
+       if (!selectedOption) {
+           alert('行を選択してください。');
+           return;
+       }
+
+       var currentIndex = selectedOption.index;
+
+       if (currentIndex === rightList.options.length - 1) {
+           // At the bottom position, cannot move down further
+           return;
+       }
+
+       // Get the item below and swap positions
+       var belowItem = rightList.options[currentIndex + 1];
+       var clonedSelected = selectedOption.cloneNode(true);
+
+       // Swap positions
+       rightList.options[currentIndex + 1] = clonedSelected;
+       rightList.options[currentIndex] = belowItem;
+
+       // Update selected status
+       rightList.options[currentIndex].selected = false;
+       rightList.options[currentIndex + 1].selected = true;
+   });
+    
+</script>
+</body>
+</html>
+
+
+-----------------------------------
+T002
+        HttpSession session = request.getSession();
+        
+        // Lấy giá trị từ session
+        String settingHeaderObject[] = (String[])session.getAttribute("settingheader");
+        if (settingHeaderObject == null) {
+        	settingHeaderObject = new String[]{"3", "4", "5", "6"};
+        	session.setAttribute("settingheader", settingHeaderObject);
+        }
+        t002Dto.setSettingHeader(settingHeaderObject);
+
+
+
+
+ -----------------
+ 		<table class="search-container__table" id="sortableTable">
+	        <tr id="header">
+	        	 <logic:iterate id="setting" name="model" property="settingHeader">
+	        	 	<logic:equal name="setting" value="1">
+	        	 		<th><input type="checkbox" id="checkAll" name="checkboxAll" value="" onclick="toggleAllCheckboxes()"></th>
+	        	 	</logic:equal>
+	        	 	<logic:equal name="setting" value="2">
+	        	 		<th>Customer ID</th>
+	        	 	</logic:equal>
+	        	 	<logic:equal name="setting" value="3">
+	        	 		 <th>Customer Name</th>
+	        	 	</logic:equal>
+	        	 	<logic:equal name="setting" value="4">
+	        	 		 <th>Sex</th>
+	        	 	</logic:equal>
+	        	 	<logic:equal name="setting" value="5">
+	        	 		  <th>Birthday</th>
+	        	 	</logic:equal>
+	        	 	<logic:equal name="setting" value="6">
+	        	 		   <th>Address</th>
+	        	 	</logic:equal>
+	        	 	<logic:equal name="setting" value="7">
+	        	 		  <th>Email</th>
+	        	 	</logic:equal>
+	        	 </logic:iterate>
+	        </tr>
+	      
+	        <logic:iterate id="dept" name="model" property="pageData">
+			     <tr id="tr-table">
+			     	<logic:iterate id="setting" name="model" property="settingHeader">
+			     		<logic:equal name="setting" value="1">
+			                <td>
+			                    <input type="checkbox" name="selectedCustomers" value="<bean:write name='dept' property='customerId'/>">
+			                </td>
+			            </logic:equal>
+			            <logic:equal name="setting" value="2">
+			                <td>
+								<html:link action="/T003">
+								    <html:param name="id">
+									    <bean:write name="dept" property="customerId" />
+									</html:param>
+								    <bean:write name="dept" property="customerId" />
+								</html:link>
+					        </td>
+			            </logic:equal>
+			            <logic:equal name="setting" value="3">
+			                 <td><bean:write name='dept' property='customerName' /></td>
+			            </logic:equal>
+			            <logic:equal name="setting" value="4">
+			                <td><bean:write name='dept' property='sex' /></td>
+			            </logic:equal>
+			            <logic:equal name="setting" value="5">
+			                  <td><bean:write name='dept' property='birthDay' /></td>
+			            </logic:equal>
+			            <logic:equal name="setting" value="6">
+			                 <td><bean:write name='dept' property='address' /></td>
+			            </logic:equal>
+			            <logic:equal name="setting" value="7">
+			                 <td><bean:write name='dept' property='email' /></td>
+			            </logic:equal>
+			     	</logic:iterate>
+			    </tr> 
+			</logic:iterate>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function replaceThContentWithCheckboxInput() {
         // Get all th elements
         var thElements = document.querySelectorAll('#myTable th');
@@ -117,66 +463,6 @@ function updateInput() {
 
 
 
-
-
-<script type="text/javascript">
-document.addEventListener('DOMContentLoaded', function () {
-    var localStorageValues = JSON.parse(localStorage.getItem('columnOrder'));
-    if (localStorageValues == null) {
-        localStorageValues = [
-            { name: 'Check box', key: 'Checkbox' },
-            { name: 'Customer Id', key: 'CustomerId' },
-            { name: 'Customer Name', key: 'CustomerName' },
-            { name: 'Sex', key: 'Sex' },
-            { name: 'Birthday', key: 'BirthDay' },
-            { name: 'Address', key: 'Address' }
-        ];
-    }
-
-    var headerHtml = '';
-    localStorageValues.forEach(item => {
-        headerHtml += '<th>' + item.name + '</th>';
-    });
-    document.getElementById('header').innerHTML = headerHtml;
-
-    
-     var dataRows = document.querySelectorAll('#sortableTable tr');
-    let tdHtml = '';
-    dataRows.forEach(item  => {
-    	localStorageValues.forEach(item => {
-    		var columnName = item.key;
-
-            switch (columnName) {
-                case 'Checkbox':
-                    tdHtml += '<td>' + '<input type="checkbox" name="selectedCustomers" value="<bean:write name='dept' property='customerId'/>">' + '</td>';
-                    break;
-                case 'CustomerId':
-                	tdHtml += '<td>' +'<html:link action="/T003"><html:param name="id"><bean:write name="dept" property="customerId" /></html:param><bean:write name="dept" property="customerId" /></html:link>'+ '</td>';
-                	break;
-                case 'CustomerName':
-                	tdHtml += '<td>' + '<bean:write name='dept' property='customerName' />' + '</td>';
-                	break;
-                case 'Sex':
-                   tdHtml += '<td>' +'<bean:write name='dept' property='sex' />'+ '</td>';
-                   break;
-                case 'BirthDay':
-                    tdHtml += '<td>' +'<bean:write name='dept' property='birthDay' />'+ '</td>';
-                    break;
-                    
-                
-                case 'Address':
-                	tdHtml += '<td>' +'<bean:write name='dept' property='address' />'+ '</td>';
-                    break;
-            }
-            
-    	});
-        
-   	 dataRows.innerHTML = tdHtml;
-    }); 
-    
-    
-});
-</script>
 
 
 
