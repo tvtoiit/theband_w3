@@ -1,3 +1,44 @@
+
+ function moveItemsRight() {
+        var leftList = document.getElementById("leftList");
+        var rightList = document.getElementById("rightList");
+        var moveRightButton = document.getElementById("moveRight");
+
+        // Kiểm tra xem có item nào được chọn hay không
+        if (leftList.selectedIndex === -1) {
+            alert("行を選択してください。"); // Xuất thông báo nếu không có item nào được chọn
+            return;
+        }
+
+        // Kiểm tra xem item đã chọn có phải là Header Item không
+        var selectedOption = leftList.options[leftList.selectedIndex];
+        if (selectedOption.value.startsWith("header")) {
+            // Trường hợp đã select Header Item
+            alert("[" + selectedOption.text + "] cannot move!");
+            return;
+        }
+
+        // Di chuyển item đã chọn từ danh sách bên trái sang danh sách bên phải
+        rightList.add(new Option(selectedOption.text, selectedOption.value));
+        leftList.remove(leftList.selectedIndex);
+
+        // Kiểm tra xem danh sách header bên trái có trống không
+        var headerListLeft = document.querySelectorAll('#leftList option[value^="header"]');
+        if (headerListLeft.length === 0) {
+            moveRightButton.disabled = true; // Disable nút nếu danh sách header bên trái trống
+        } else {
+            moveRightButton.disabled = false; // Enable nút nếu danh sách header bên trái không trống
+        }
+    }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  function moveItemsRight() {
         var leftList = document.getElementById("leftList");
         var rightList = document.getElementById("rightList");
