@@ -8,7 +8,7 @@ function moveItemsLeft() {
             return;
         }
 
-        // Kiểm tra xem item đã chọn có phải là Header Item hay không
+        // Kiểm tra xem item đã chọn có phải là Header Item không
         var selectedOption = rightList.options[rightList.selectedIndex];
         if (selectedOption.value.startsWith("header")) {
             // Trường hợp đã select Header Item
@@ -16,6 +16,10 @@ function moveItemsLeft() {
                 alert("[" + selectedOption.text + "] cannot remove !"); // Xuất thông báo không thể xóa Header Item cụ thể
                 return;
             }
+        } else if (selectedOption.value === "1" || selectedOption.value === "2") {
+            // Trường hợp đã select "CheckBox" hoặc "Customer ID"
+            alert("[" + selectedOption.text + "] cannot remove !");
+            return;
         }
 
         // Di chuyển item đã chọn từ danh sách bên phải sang danh sách bên trái
