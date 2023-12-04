@@ -1,4 +1,45 @@
 
+function moveItems() {
+        var leftList = document.getElementById("leftList");
+        var rightList = document.getElementById("rightList");
+
+        // Kiểm tra xem có item nào được chọn hay không
+        if (leftList.selectedIndex === -1) {
+            alert("行を選択してください。"); // Xuất thông báo nếu không có item nào được chọn
+            return;
+        }
+
+        // Di chuyển item đã chọn từ danh sách bên trái sang danh sách bên phải
+        for (var i = 0; i < leftList.options.length; i++) {
+            if (leftList.options[i].selected) {
+                var option = leftList.options[i];
+                rightList.add(new Option(option.text, option.value));
+                leftList.remove(i);
+                i--; // Giảm giá trị của biến i để đảm bảo không bỏ qua item sau khi xóa
+            }
+        }
+
+        // Kiểm tra xem danh sách header trái có trống không
+        var headerList = document.querySelectorAll('#leftList option[value^="header"]');
+        var moveRightButton = document.getElementById("moveRight");
+
+        if (headerList.length === 0) {
+            moveRightButton.disabled = true; // Disable nút nếu danh sách header trái trống
+        } else {
+            moveRightButton.disabled = false; // Enable nút nếu danh sách header trái không trống
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
 public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request,
 			HttpServletResponse response) throws Exception 
 	{
