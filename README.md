@@ -1,3 +1,44 @@
+mvn clean install
+
+@Repository
+public interface LoginRepository extends JpaRepository<MstUser, Integer> {
+
+    @Query("SELECT u FROM MstUser u WHERE u.userId = :userId AND u.password = :password AND u.deleteYmd IS NULL")
+    MstUser findByUserIdAndPasswordAndDeleteYmdIsNull(@Param("userId") String userId, @Param("password") String password);
+
+}
+
+
+
+@Controller
+public class LoginController {
+
+    @PostMapping("/login")
+    public String login(@ModelAttribute("user") User user) {
+        if (!userService.isLogin(user)) {
+            // Thêm thuộc tính view
+            Model model = new Model();
+            model.addAttribute("error", "Sai tài khoản hoặc mật khẩu");
+            return "login";
+        }
+
+        // Thực hiện logic đăng nhập
+
+        return "redirect:/home";
+    }
+
+}
+
+
+
+<c:if test="${not empty error}">
+	<div class="error">${error}</div>
+</c:if>
+
+
+https://github.com/spring-projects/spring-boot/releases/tag/v2.1.3.RELEASE
+
+
 
  function moveItemsRight() {
         var leftList = document.getElementById("leftList");
