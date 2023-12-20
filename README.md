@@ -1,3 +1,21 @@
+// Ghi dòng header của file CSV (tên cột) với định dạng bao bọc bởi dấu ngoặc kép
+writer.println("\"Customer Name\",\"Sex\",\"Birthday\"");
+
+// Ghi dữ liệu từ danh sách vào file CSV với định dạng bao bọc bởi dấu ngoặc kép
+for (mstcustomer customer : dataToExport) {
+    // Thay đổi giá trị của trường "sex"
+    String formattedSex = (customer.getSex() == 0) ? "FeMale" : "Male";
+
+    writer.println("\"" + customer.getCustomerName() + "\",\"" + formattedSex + "\",\"" + customer.getBirthDay() + "\"");
+}
+
+// Đóng writer
+writer.close();
+
+
+
+
+
 <form action="./Import.do" method="POST">
     <select id="leftList" name="listLeft" multiple>
         <c:forEach var="setting" items="${importForm.listLeft}">
