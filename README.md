@@ -1,3 +1,39 @@
+<form action="./Import.do" method="POST">
+    <select id="leftList" name="listLeft" multiple>
+        <c:forEach var="setting" items="${importForm.listLeft}">
+            <c:if test="${setting eq 1}">
+                <option value="1">Check Box</option>
+            </c:if>
+            <c:if test="${setting eq 2}">
+                <option value="2">Customer ID</option>
+            </c:if>
+            <!-- Add similar blocks for other options -->
+        </c:forEach>
+    </select>
+    <button type="submit" name="sMode" value="right" id="moveRight">Move Right</button>
+    <button type="button" id="moveLeft">Move Left</button>
+
+    <select name="listRight" id="rightList" multiple>
+        <c:forEach var="setting" items="${importForm.settingHeader}">
+            <c:if test="${setting eq 1}">
+                <option value="1">Check Box</option>
+            </c:if>
+            <c:if test="${setting eq 2}">
+                <option value="2">Customer ID</option>
+            </c:if>
+            <!-- Add similar blocks for other options -->
+        </c:forEach>
+    </select>
+    <button id="moveDown">Move Down</button>
+    <input type="hidden" name="settingHeader" id="settinginputsubmit" value=""/>
+    <button type="submit" id="saveButton" onclick="updateInput()">Save</button>
+</form>
+
+
+
+
+
+
 https://github.com/amitiw4u/safe
 
 mvn clean install
